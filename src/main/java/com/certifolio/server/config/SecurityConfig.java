@@ -38,13 +38,15 @@ public class SecurityConfig {
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers("/", "/css/**", "/images/**", "/js/**",
-                                                                "/h2-console/**", "/profile")
+                                                                "/h2-console/**", "/profile", "/chat-test.html")
                                                 .permitAll()
                                                 .requestMatchers("/oauth2/**", "/login/oauth2/**", "/login").permitAll()
                                                 // Swagger UI 접근 허용
                                                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html",
                                                                 "/v3/api-docs/**", "/swagger-resources/**")
                                                 .permitAll()
+                                                // WebSocket 엔드포인트 허용
+                                                .requestMatchers("/ws-stomp/**").permitAll()
                                                 // 멘토링 API - 검색/조회는 비인증 허용
                                                 .requestMatchers(org.springframework.http.HttpMethod.GET,
                                                                 "/api/mentors", "/api/mentors/**")

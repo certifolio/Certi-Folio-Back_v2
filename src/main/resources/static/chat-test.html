@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certi-Folio 채팅 테스트</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, #06b6d4, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(100, 116, 139, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .card h2 {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        label {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            min-width: 90px;
+        }
+
+        input,
+        select {
+            flex: 1;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(100, 116, 139, 0.4);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: #e2e8f0;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #06b6d4;
+        }
+
+        button {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-connect {
+            background: linear-gradient(135deg, #06b6d4, #0891b2);
+            color: white;
+        }
+
+        .btn-connect:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+        }
+
+        .btn-connect:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-disconnect {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .btn-send {
+            background: linear-gradient(135deg, #a855f7, #7c3aed);
+            color: white;
+        }
+
+        .btn-send:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+        }
+
+        .btn-send:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-left: auto;
+        }
+
+        .status.connected {
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+        }
+
+        .status.disconnected {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status.connected .status-dot {
+            background: #4ade80;
+        }
+
+        .status.disconnected .status-dot {
+            background: #f87171;
+        }
+
+        #chatBox {
+            height: 350px;
+            overflow-y: auto;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(100, 116, 139, 0.2);
+        }
+
+        .message {
+            margin-bottom: 8px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            max-width: 85%;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.mine {
+            background: rgba(6, 182, 212, 0.2);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .message.other {
+            background: rgba(100, 116, 139, 0.15);
+            border: 1px solid rgba(100, 116, 139, 0.2);
+        }
+
+        .message.system {
+            background: rgba(168, 85, 247, 0.1);
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            text-align: center;
+            font-size: 0.8rem;
+            color: #c084fc;
+            max-width: 100%;
+        }
+
+        .message .sender {
+            font-size: 0.75rem;
+            color: #06b6d4;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .message .time {
+            font-size: 0.7rem;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        #logBox {
+            height: 150px;
+            overflow-y: auto;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 8px;
+            padding: 12px;
+            border: 1px solid rgba(100, 116, 139, 0.2);
+            font-family: 'Consolas', monospace;
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .log-entry {
+            margin-bottom: 4px;
+        }
+
+        .log-entry.error {
+            color: #f87171;
+        }
+
+        .log-entry.success {
+            color: #4ade80;
+        }
+
+        .log-entry.info {
+            color: #38bdf8;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🔌 Certi-Folio WebSocket 채팅 테스트</h1>
+    <div class="container">
+
+        <!-- 연결 설정 -->
+        <div class="card">
+            <div style="display:flex; align-items:center;">
+                <h2>1. WebSocket 연결</h2>
+                <div id="statusBadge" class="status disconnected">
+                    <span class="status-dot"></span>
+                    <span id="statusText">연결 안 됨</span>
+                </div>
+            </div>
+            <div class="form-row">
+                <label>서버 주소</label>
+                <input id="serverUrl" value="http://localhost:8080/ws-stomp" readonly />
+            </div>
+            <div class="form-row">
+                <label>Sender Subject</label>
+                <input id="senderSubject" value="test:user1" placeholder="provider:providerId" />
+            </div>
+            <div class="form-row">
+                <label>세션 ID</label>
+                <input id="sessionId" type="number" value="1" min="1" />
+            </div>
+            <div class="form-row" style="justify-content: flex-end; gap: 8px;">
+                <button id="btnConnect" class="btn-connect" onclick="connect()">연결</button>
+                <button id="btnDisconnect" class="btn-disconnect" onclick="disconnect()" disabled>해제</button>
+            </div>
+        </div>
+
+        <!-- 채팅 영역 -->
+        <div class="card">
+            <h2>2. 채팅</h2>
+            <div id="chatBox"></div>
+            <div class="form-row">
+                <input id="messageInput" placeholder="메시지를 입력하세요..."
+                    onkeypress="if(event.key==='Enter') sendMessage()" />
+                <button id="btnSend" class="btn-send" onclick="sendMessage()" disabled>전송</button>
+            </div>
+        </div>
+
+        <!-- 로그 -->
+        <div class="card">
+            <h2>3. 연결 로그</h2>
+            <div id="logBox"></div>
+        </div>
+    </div>
+
+    <script>
+        let stompClient = null;
+        let connected = false;
+
+        function log(message, type = '') {
+            const logBox = document.getElementById('logBox');
+            const time = new Date().toLocaleTimeString('ko-KR');
+            logBox.innerHTML += `<div class="log-entry ${type}">[${time}] ${message}</div>`;
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        function setStatus(isConnected) {
+            connected = isConnected;
+            const badge = document.getElementById('statusBadge');
+            const text = document.getElementById('statusText');
+            badge.className = `status ${isConnected ? 'connected' : 'disconnected'}`;
+            text.textContent = isConnected ? '연결됨' : '연결 안 됨';
+            document.getElementById('btnConnect').disabled = isConnected;
+            document.getElementById('btnDisconnect').disabled = !isConnected;
+            document.getElementById('btnSend').disabled = !isConnected;
+        }
+
+        function connect() {
+            const serverUrl = document.getElementById('serverUrl').value;
+            const sessionId = document.getElementById('sessionId').value;
+            const senderSubject = document.getElementById('senderSubject').value;
+
+            log(`연결 시도... ${serverUrl}`, 'info');
+
+            const socket = new SockJS(serverUrl);
+            stompClient = Stomp.over(socket);
+
+            // STOMP 디버그 로그
+            stompClient.debug = function (str) {
+                if (str.indexOf('PING') === -1 && str.indexOf('PONG') === -1) {
+                    log(`STOMP: ${str}`);
+                }
+            };
+
+            stompClient.connect({}, function (frame) {
+                setStatus(true);
+                log('✅ WebSocket 연결 성공!', 'success');
+                log(`Frame: ${frame}`, 'info');
+
+                // 채팅 토픽 구독
+                const topic = `/topic/chat.${sessionId}`;
+                log(`📡 구독: ${topic}`, 'info');
+
+                stompClient.subscribe(topic, function (message) {
+                    const msg = JSON.parse(message.body);
+                    displayMessage(msg);
+                });
+
+                // 입장 메시지 전송
+                const joinPayload = {
+                    sessionId: parseInt(sessionId),
+                    content: '',
+                    senderSubject: senderSubject
+                };
+                stompClient.send(`/app/chat.join/${sessionId}`, {}, JSON.stringify(joinPayload));
+                log(`🚪 입장 메시지 전송 (sessionId: ${sessionId})`, 'info');
+
+            }, function (error) {
+                setStatus(false);
+                log(`❌ 연결 실패: ${error}`, 'error');
+            });
+        }
+
+        function disconnect() {
+            if (stompClient !== null) {
+                stompClient.disconnect(function () {
+                    setStatus(false);
+                    log('🔌 연결 해제됨', 'info');
+                });
+            }
+        }
+
+        function sendMessage() {
+            if (!connected) return;
+
+            const input = document.getElementById('messageInput');
+            const content = input.value.trim();
+            if (!content) return;
+
+            const sessionId = document.getElementById('sessionId').value;
+            const senderSubject = document.getElementById('senderSubject').value;
+
+            const payload = {
+                sessionId: parseInt(sessionId),
+                content: content,
+                senderSubject: senderSubject
+            };
+
+            stompClient.send(`/app/chat.send/${sessionId}`, {}, JSON.stringify(payload));
+            log(`📤 메시지 전송: "${content}"`, 'info');
+            input.value = '';
+            input.focus();
+        }
+
+        function displayMessage(msg) {
+            const chatBox = document.getElementById('chatBox');
+            const senderSubject = document.getElementById('senderSubject').value;
+
+            let className = 'other';
+            if (msg.type === 'SYSTEM') {
+                className = 'system';
+            } else if (msg.mine) {
+                className = 'mine';
+            }
+
+            const time = msg.sentAt ? new Date(msg.sentAt).toLocaleTimeString('ko-KR') : '';
+
+            let html = `<div class="message ${className}">`;
+            if (msg.type !== 'SYSTEM' && className !== 'mine') {
+                html += `<div class="sender">${msg.senderName || 'Unknown'}</div>`;
+            }
+            html += `<div>${msg.content}</div>`;
+            if (time) {
+                html += `<div class="time">${time}</div>`;
+            }
+            html += `</div>`;
+
+            chatBox.innerHTML += html;
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            log(`📨 수신: [${msg.type}] ${msg.senderName || 'System'}: ${msg.content}`, 'success');
+        }
+    </script>
+</body>
+
+</html>
