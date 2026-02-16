@@ -1,6 +1,6 @@
-package com.certifolio.server.Auth.handler;
+package com.certifolio.server.auth.handler;
 
-import com.certifolio.server.Auth.jwt.JwtTokenProvider;
+import com.certifolio.server.auth.jwt.JwtTokenProvider;
 import com.certifolio.server.User.domain.User;
 import com.certifolio.server.User.repository.UserRepository;
 import jakarta.servlet.ServletException;

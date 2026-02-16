@@ -278,6 +278,127 @@ public class PortfolioServiceImpl {
                 .build()).collect(Collectors.toList());
     }
 
+    // ===== UPDATE 메서드들 =====
+
+    public CertificateDTO updateCertificate(Long userId, Long id, CertificateDTO dto) {
+        Certificate cert = certificateRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Certificate not found"));
+        if (!cert.getUser().getId().equals(userId)) {
+            throw new RuntimeException("Unauthorized");
+        }
+        cert.update(dto.getName(), dto.getIssuer(),
+                parseDate(dto.getIssueDate()), parseDate(dto.getExpiryDate()),
+                dto.getStatus(), dto.getScore(), dto.getCertificateNumber(),
+                dto.getCategory(), dto.getImageUrl());
+        Certificate saved = certificateRepository.save(cert);
+        return CertificateDTO.builder()
+                .id(saved.getId()).name(saved.getName()).issuer(saved.getIssuer())
+                .issueDate(dateToString(saved.getIssueDate())).expiryDate(dateToString(saved.getExpiryDate()))
+                .status(saved.getStatus()).score(saved.getScore())
+                .certificateNumber(saved.getCertificateNumber()).category(saved.getCategory())
+                .imageUrl(saved.getImageUrl()).build();
+    }
+
+    public ProjectDTO updateProject(Long userId, Long id, ProjectDTO dto) {
+        Project p = projectRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Project not found"));
+        if (!p.getUser().getId().equals(userId)) {
+            throw new RuntimeException("Unauthorized");
+        }
+        p.update(dto.getName(), dto.getType(), dto.getRole(), dto.getTeamSize(),
+                dto.getTechStack(), dto.getDescription(), dto.getGithubLink(),
+                dto.getDemoLink(), dto.getResult(),
+                parseDate(dto.getStartDate()), parseDate(dto.getEndDate()));
+        Project saved = projectRepository.save(p);
+        return ProjectDTO.builder()
+                .id(saved.getId()).name(saved.getName()).type(saved.getType())
+                .role(saved.getRole()).teamSize(saved.getTeamSize()).techStack(saved.getTechStack())
+                .description(saved.getDescription()).githubLink(saved.getGithubLink())
+                .demoLink(saved.getDemoLink()).result(saved.getResult())
+                .startDate(dateToString(saved.getStartDate())).endDate(dateToString(saved.getEndDate()))
+                .build();
+    }
+
+    public void deleteActivity(Long userId, Long id) {
+        Activity a = activityRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Activity not found"));
+        if (!a.getUser().getId().equals(userId)) {
+            throw new RuntimeException("Unauthorized");
+        }
+        activityRepository.delete(a);
+    }
+
+    public ActivityDTO updateActivity(Long userId, Long id, ActivityDTO dto) {
+        Activity a = activityRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Activity not found"));
+        if (!a.getUser().getId().equals(userId)) {
+            throw new RuntimeException("Unauthorized");
+        }
+        a.update(dto.getName(), dto.getType(), dto.getOrganizer(), dto.getRole(),
+                dto.getPeriod(), dto.getDescription(), dto.getLink(), dto.getResult());
+        Activity saved = activityRepository.save(a);
+        return ActivityDTO.builder()
+                .id(saved.getId()).name(saved.getName()).type(saved.getType())
+                .organizer(saved.getOrganizer()).role(saved.getRole()).period(saved.getPeriod())
+                .description(saved.getDescription()).link(saved.getLink()).result(saved.getResult())
+                .build();
+    }
+
+    public void deleteCareer(Long userId, Long id) {
+        Career c = careerRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Career not found"));
+        if (!c.getUser().getId().equals(userId)) {
+            throw new RuntimeException("Unauthorized");
+        }
+        careerRepository.delete(c);
+    }
+
+    public CareerDTO updateCareer(Long userId, Long id, CareerDTO dto) {
+        Career c = careerRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Career not found"));
+        if (!c.getUser().getId().equals(userId)) {
+            throw new RuntimeException("Unauthorized");
+        }
+        c.update(dto.getCompany(), dto.getPosition(), dto.getDepartment(), dto.getType(),
+                parseDate(dto.getStartDate()), parseDate(dto.getEndDate()),
+                dto.isCurrent(), dto.getLocation(), dto.getDescription(), dto.getSkills());
+        Career saved = careerRepository.save(c);
+        return CareerDTO.builder()
+                .id(saved.getId()).company(saved.getCompany()).position(saved.getPosition())
+                .department(saved.getDepartment()).type(saved.getType())
+                .startDate(dateToString(saved.getStartDate())).endDate(dateToString(saved.getEndDate()))
+                .isCurrent(saved.isCurrent()).location(saved.getLocation())
+                .description(saved.getDescription()).skills(saved.getSkills())
+                .build();
+    }
+
+    public void deleteEducation(Long userId, Long id) {
+        Education e = educationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Education not found"));
+        if (!e.getUser().getId().equals(userId)) {
+            throw new RuntimeException("Unauthorized");
+        }
+        educationRepository.delete(e);
+    }
+
+    public EducationDTO updateEducation(Long userId, Long id, EducationDTO dto) {
+        Education e = educationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Education not found"));
+        if (!e.getUser().getId().equals(userId)) {
+            throw new RuntimeException("Unauthorized");
+        }
+        e.update(dto.getType(), dto.getSchoolName(), dto.getMajor(), dto.getDegree(),
+                dto.getStatus(), parseDate(dto.getStartDate()), parseDate(dto.getEndDate()),
+                dto.isCurrent(), dto.getGpa(), dto.getMaxGpa(), dto.getLocation());
+        Education saved = educationRepository.save(e);
+        return EducationDTO.builder()
+                .id(saved.getId()).type(saved.getType()).schoolName(saved.getSchoolName())
+                .major(saved.getMajor()).degree(saved.getDegree()).status(saved.getStatus())
+                .startDate(dateToString(saved.getStartDate())).endDate(dateToString(saved.getEndDate()))
+                .isCurrent(saved.isCurrent()).gpa(saved.getGpa()).maxGpa(saved.getMaxGpa())
+                .location(saved.getLocation()).build();
+    }
+
     private java.time.LocalDate parseDate(String dateStr) {
         if (dateStr == null || dateStr.isBlank())
             return null;

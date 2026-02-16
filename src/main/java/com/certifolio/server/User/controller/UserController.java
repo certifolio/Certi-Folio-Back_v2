@@ -2,10 +2,10 @@ package com.certifolio.server.User.controller;
 
 import com.certifolio.server.User.domain.User;
 import com.certifolio.server.User.repository.UserRepository;
+import com.certifolio.server.auth.util.AuthUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -233,23 +233,6 @@ public class UserController {
     }
 
     private User getUser(Object principal) {
-        String subject = null;
-        if (principal instanceof UserDetails) {
-            subject = ((UserDetails) principal).getUsername();
-        } else if (principal instanceof String) {
-            subject = (String) principal;
-        }
-
-        if (subject == null)
-            return null;
-
-        // Token subject is always "provider:providerId" format
-        if (subject.contains(":")) {
-            String[] parts = subject.split(":", 2);
-            return userRepository.findByProviderAndProviderId(parts[0], parts[1]).orElse(null);
-        } else {
-            // Legacy fallback: try email
-            return userRepository.findByEmail(subject).orElse(null);
-        }
+        return AuthUtils.resolveUser(principal, userRepository);
     }
 }

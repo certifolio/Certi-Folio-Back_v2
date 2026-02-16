@@ -1,4 +1,4 @@
-package com.certifolio.server.Auth.jwt;
+package com.certifolio.server.auth.jwt;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
@@ -39,10 +39,10 @@ public class JwtTokenProvider {
                 .signWith(key)
                 .compact();
     }
-    
+
     // Create token using providerId for cases where email is null
     public String createToken(String provider, String providerId, String role) {
-         Date now = new Date();
+        Date now = new Date();
         Date validity = new Date(now.getTime() + expiration);
 
         return Jwts.builder()

@@ -1,4 +1,4 @@
-package com.certifolio.server.Auth.userinfo;
+package com.certifolio.server.auth.userinfo;
 
 import java.util.Map;
 

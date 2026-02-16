@@ -61,4 +61,19 @@ public class Education {
         this.maxGpa = maxGpa;
         this.location = location;
     }
+
+    public void update(String type, String schoolName, String major, String degree, String status,
+            LocalDate startDate, LocalDate endDate, boolean isCurrent, Double gpa, Double maxGpa, String location) {
+        this.type = type;
+        this.schoolName = schoolName;
+        this.major = major;
+        this.degree = degree;
+        this.status = status;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.isCurrent = isCurrent;
+        this.gpa = gpa;
+        this.maxGpa = maxGpa;
+        this.location = location;
+    }
 }

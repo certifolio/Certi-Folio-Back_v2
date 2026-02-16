@@ -52,4 +52,16 @@ public class Activity {
         this.link = link;
         this.result = result;
     }
+
+    public void update(String name, String type, String organizer, String role,
+            String period, String description, String link, String result) {
+        this.name = name;
+        this.type = type;
+        this.organizer = organizer;
+        this.role = role;
+        this.period = period;
+        this.description = description;
+        this.link = link;
+        this.result = result;
+    }
 }

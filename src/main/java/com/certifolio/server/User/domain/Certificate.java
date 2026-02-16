@@ -55,4 +55,17 @@ public class Certificate {
         this.category = category;
         this.imageUrl = imageUrl;
     }
+
+    public void update(String name, String issuer, LocalDate issueDate, LocalDate expiryDate,
+            String status, String score, String certificateNumber, String category, String imageUrl) {
+        this.name = name;
+        this.issuer = issuer;
+        this.issueDate = issueDate;
+        this.expiryDate = expiryDate;
+        this.status = status;
+        this.score = score;
+        this.certificateNumber = certificateNumber;
+        this.category = category;
+        this.imageUrl = imageUrl;
+    }
 }

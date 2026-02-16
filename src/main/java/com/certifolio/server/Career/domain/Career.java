@@ -61,4 +61,19 @@ public class Career {
         this.description = description;
         this.skills = skills;
     }
+
+    public void update(String company, String position, String department, String type,
+            LocalDate startDate, LocalDate endDate, boolean isCurrent, String location,
+            String description, String skills) {
+        this.company = company;
+        this.position = position;
+        this.department = department;
+        this.type = type;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.isCurrent = isCurrent;
+        this.location = location;
+        this.description = description;
+        this.skills = skills;
+    }
 }

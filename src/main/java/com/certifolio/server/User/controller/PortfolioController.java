@@ -6,6 +6,7 @@ import com.certifolio.server.Activity.dto.ActivityDTO;
 import com.certifolio.server.Career.dto.CareerDTO;
 import com.certifolio.server.User.repository.UserRepository;
 import com.certifolio.server.User.service.PortfolioServiceImpl;
+import com.certifolio.server.auth.util.AuthUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,24 +24,15 @@ public class PortfolioController {
     private final PortfolioServiceImpl portfolioService;
     private final UserRepository userRepository;
 
-    // Helper to get User ID
     private Long getUserId(Object principal) {
-        // Assuming principal is compatible with how we set it in JwtFilter (String
-        // subject)
-        // We need to resolve it to ID. Ideally JwtFilter puts UserDetails or ID.
-        // Current implementation puts subject (email or provider:id).
-        String subject = principal.toString();
-        // Since we need ID, we should really look it up or better yet, put ID in token
-        // parsing.
-        // Let's look up by email or provider/id logic again.
-        // This is inefficient, but for now:
-        if (subject.contains(":")) {
-            String[] parts = subject.split(":");
-            return userRepository.findByProviderAndProviderId(parts[0], parts[1]).map(User::getId).orElseThrow();
-        } else {
-            return userRepository.findByEmail(subject).map(User::getId).orElseThrow();
+        User user = AuthUtils.resolveUser(principal, userRepository);
+        if (user == null) {
+            throw new RuntimeException("인증이 필요합니다.");
         }
+        return user.getId();
     }
+
+    // ===== CERTIFICATES =====
 
     @PostMapping("/certificates")
     public ResponseEntity<?> saveCertificates(@AuthenticationPrincipal Object principal,
@@ -62,11 +54,20 @@ public class PortfolioController {
         return ResponseEntity.ok(Map.of("success", true, "certificate", saved));
     }
 
+    @PutMapping("/certificates/{id}")
+    public ResponseEntity<?> updateCertificate(@AuthenticationPrincipal Object principal,
+            @PathVariable Long id, @RequestBody CertificateDTO dto) {
+        CertificateDTO updated = portfolioService.updateCertificate(getUserId(principal), id, dto);
+        return ResponseEntity.ok(Map.of("success", true, "certificate", updated));
+    }
+
     @DeleteMapping("/certificates/{id}")
     public ResponseEntity<?> deleteCertificate(@AuthenticationPrincipal Object principal, @PathVariable Long id) {
         portfolioService.deleteCertificate(getUserId(principal), id);
         return ResponseEntity.ok(Map.of("success", true));
     }
+
+    // ===== PROJECTS =====
 
     @PostMapping("/projects")
     public ResponseEntity<?> saveProjects(@AuthenticationPrincipal Object principal,
@@ -80,11 +81,20 @@ public class PortfolioController {
         return ResponseEntity.ok(Map.of("success", true, "data", portfolioService.getProjects(getUserId(principal))));
     }
 
+    @PutMapping("/projects/{id}")
+    public ResponseEntity<?> updateProject(@AuthenticationPrincipal Object principal,
+            @PathVariable Long id, @RequestBody ProjectDTO dto) {
+        ProjectDTO updated = portfolioService.updateProject(getUserId(principal), id, dto);
+        return ResponseEntity.ok(Map.of("success", true, "project", updated));
+    }
+
     @DeleteMapping("/projects/{id}")
     public ResponseEntity<?> deleteProject(@AuthenticationPrincipal Object principal, @PathVariable Long id) {
         portfolioService.deleteProject(getUserId(principal), id);
         return ResponseEntity.ok(Map.of("success", true));
     }
+
+    // ===== ACTIVITIES =====
 
     @PostMapping("/activities")
     public ResponseEntity<?> saveActivities(@AuthenticationPrincipal Object principal,
@@ -98,6 +108,21 @@ public class PortfolioController {
         return ResponseEntity.ok(Map.of("success", true, "data", portfolioService.getActivities(getUserId(principal))));
     }
 
+    @PutMapping("/activities/{id}")
+    public ResponseEntity<?> updateActivity(@AuthenticationPrincipal Object principal,
+            @PathVariable Long id, @RequestBody ActivityDTO dto) {
+        ActivityDTO updated = portfolioService.updateActivity(getUserId(principal), id, dto);
+        return ResponseEntity.ok(Map.of("success", true, "activity", updated));
+    }
+
+    @DeleteMapping("/activities/{id}")
+    public ResponseEntity<?> deleteActivity(@AuthenticationPrincipal Object principal, @PathVariable Long id) {
+        portfolioService.deleteActivity(getUserId(principal), id);
+        return ResponseEntity.ok(Map.of("success", true));
+    }
+
+    // ===== CAREERS =====
+
     @PostMapping("/careers")
     public ResponseEntity<?> saveCareers(@AuthenticationPrincipal Object principal, @RequestBody List<CareerDTO> dtos) {
         portfolioService.saveCareers(getUserId(principal), dtos);
@@ -109,31 +134,26 @@ public class PortfolioController {
         Long userId = getUserId(principal);
         List<CareerDTO> careers = portfolioService.getCareers(userId);
 
-        // Calculate stats
         int total = careers.size();
         int current = (int) careers.stream().filter(CareerDTO::isCurrent).count();
         int companies = (int) careers.stream().map(CareerDTO::getCompany).distinct().count();
 
-        // Calculate total months from dates
         int totalMonths = 0;
         for (CareerDTO career : careers) {
             try {
                 if (career.getStartDate() != null && !career.getStartDate().isEmpty()) {
                     java.time.LocalDate startDate = parseDate(career.getStartDate());
                     java.time.LocalDate endDate;
-
                     if (career.isCurrent() || career.getEndDate() == null || career.getEndDate().isEmpty()) {
                         endDate = java.time.LocalDate.now();
                     } else {
                         endDate = parseDate(career.getEndDate());
                     }
-
                     long months = java.time.temporal.ChronoUnit.MONTHS.between(startDate, endDate);
-                    totalMonths += (int) Math.max(1, months); // At least 1 month
+                    totalMonths += (int) Math.max(1, months);
                 }
             } catch (Exception e) {
                 // Skip if date parsing fails
-                System.out.println("Failed to parse career dates: " + e.getMessage());
             }
         }
 
@@ -143,10 +163,20 @@ public class PortfolioController {
         stats.put("totalMonths", totalMonths);
         stats.put("companies", companies);
 
-        return ResponseEntity.ok(Map.of(
-                "success", true,
-                "careers", careers,
-                "stats", stats));
+        return ResponseEntity.ok(Map.of("success", true, "careers", careers, "stats", stats));
+    }
+
+    @PutMapping("/careers/{id}")
+    public ResponseEntity<?> updateCareer(@AuthenticationPrincipal Object principal,
+            @PathVariable Long id, @RequestBody CareerDTO dto) {
+        CareerDTO updated = portfolioService.updateCareer(getUserId(principal), id, dto);
+        return ResponseEntity.ok(Map.of("success", true, "career", updated));
+    }
+
+    @DeleteMapping("/careers/{id}")
+    public ResponseEntity<?> deleteCareer(@AuthenticationPrincipal Object principal, @PathVariable Long id) {
+        portfolioService.deleteCareer(getUserId(principal), id);
+        return ResponseEntity.ok(Map.of("success", true));
     }
 
     // Helper to parse various date formats
@@ -154,29 +184,22 @@ public class PortfolioController {
         if (dateStr == null || dateStr.isEmpty()) {
             return java.time.LocalDate.now();
         }
-
-        // Try YYYY-MM-DD format
         if (dateStr.matches("\\d{4}-\\d{2}-\\d{2}")) {
             return java.time.LocalDate.parse(dateStr);
         }
-
-        // Try YYYY.MM.DD format
         if (dateStr.matches("\\d{4}\\.\\d{2}\\.\\d{2}")) {
             return java.time.LocalDate.parse(dateStr.replace(".", "-"));
         }
-
-        // Try YYYY-MM format
         if (dateStr.matches("\\d{4}-\\d{2}")) {
             return java.time.LocalDate.parse(dateStr + "-01");
         }
-
-        // Try YYYY.MM format
         if (dateStr.matches("\\d{4}\\.\\d{2}")) {
             return java.time.LocalDate.parse(dateStr.replace(".", "-") + "-01");
         }
-
         return java.time.LocalDate.now();
     }
+
+    // ===== EDUCATIONS =====
 
     @PostMapping("/educations")
     public ResponseEntity<?> saveEducations(@AuthenticationPrincipal Object principal,
@@ -190,27 +213,24 @@ public class PortfolioController {
         return ResponseEntity.ok(Map.of("success", true, "data", portfolioService.getEducations(getUserId(principal))));
     }
 
+    @PutMapping("/educations/{id}")
+    public ResponseEntity<?> updateEducation(@AuthenticationPrincipal Object principal,
+            @PathVariable Long id, @RequestBody EducationDTO dto) {
+        EducationDTO updated = portfolioService.updateEducation(getUserId(principal), id, dto);
+        return ResponseEntity.ok(Map.of("success", true, "education", updated));
+    }
+
+    @DeleteMapping("/educations/{id}")
+    public ResponseEntity<?> deleteEducation(@AuthenticationPrincipal Object principal, @PathVariable Long id) {
+        portfolioService.deleteEducation(getUserId(principal), id);
+        return ResponseEntity.ok(Map.of("success", true));
+    }
+
+    // ===== FULL PROFILE =====
+
     @PostMapping("/profile")
     public ResponseEntity<?> saveProfile(@AuthenticationPrincipal Object principal, @RequestBody ProfileUploadDTO dto) {
         Long userId = getUserId(principal);
-
-        // Debug logging
-        System.out.println("===== PROFILE SAVE REQUEST =====");
-        System.out.println("User ID: " + userId);
-        System.out.println("HighSchool: " + (dto.getHighSchool() != null ? dto.getHighSchool().getName() : "null"));
-        System.out.println("University: " + (dto.getUniversity() != null ? dto.getUniversity().getName() : "null"));
-        System.out.println("Projects count: " + (dto.getProjects() != null ? dto.getProjects().size() : 0));
-        System.out.println("Activities count: " + (dto.getActivities() != null ? dto.getActivities().size() : 0));
-        System.out.println("Certificates count: " + (dto.getCertificates() != null ? dto.getCertificates().size() : 0));
-        System.out.println("Experience: " + (dto.getExperience() != null
-                ? "Internships="
-                        + (dto.getExperience().getInternships() != null ? dto.getExperience().getInternships().size()
-                                : 0)
-                        +
-                        ", Jobs=" + (dto.getExperience().getJobs() != null ? dto.getExperience().getJobs().size() : 0)
-                : "null"));
-        System.out.println("================================");
-
         portfolioService.saveFullProfile(userId, dto);
         return ResponseEntity.ok(Map.of("success", true));
     }

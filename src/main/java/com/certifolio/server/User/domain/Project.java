@@ -64,4 +64,20 @@ public class Project {
         this.startDate = startDate;
         this.endDate = endDate;
     }
+
+    public void update(String name, String type, String role, String teamSize, String techStack,
+            String description, String githubLink, String demoLink, String result,
+            LocalDate startDate, LocalDate endDate) {
+        this.name = name;
+        this.type = type;
+        this.role = role;
+        this.teamSize = teamSize;
+        this.techStack = techStack;
+        this.description = description;
+        this.githubLink = githubLink;
+        this.demoLink = demoLink;
+        this.result = result;
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
 }

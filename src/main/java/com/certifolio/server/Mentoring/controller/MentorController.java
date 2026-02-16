@@ -4,11 +4,11 @@ import com.certifolio.server.User.domain.User;
 import com.certifolio.server.Mentoring.dto.MentorDTO;
 import com.certifolio.server.User.repository.UserRepository;
 import com.certifolio.server.Mentoring.service.MentorService;
+import com.certifolio.server.auth.util.AuthUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
@@ -119,22 +119,6 @@ public class MentorController {
      * Principal에서 User 조회
      */
     private User getUser(Object principal) {
-        String subject = null;
-        if (principal instanceof UserDetails) {
-            subject = ((UserDetails) principal).getUsername();
-        } else if (principal instanceof String) {
-            subject = (String) principal;
-        }
-
-        if (subject == null)
-            return null;
-
-        // Token subject is always "provider:providerId" format
-        if (subject.contains(":")) {
-            String[] parts = subject.split(":", 2);
-            return userRepository.findByProviderAndProviderId(parts[0], parts[1]).orElse(null);
-        }
-
-        return null;
+        return AuthUtils.resolveUser(principal, userRepository);
     }
 }

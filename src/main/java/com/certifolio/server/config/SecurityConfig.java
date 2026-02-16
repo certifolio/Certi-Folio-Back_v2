@@ -41,17 +41,21 @@ public class SecurityConfig {
                                                                 "/h2-console/**", "/profile")
                                                 .permitAll()
                                                 .requestMatchers("/oauth2/**", "/login/oauth2/**", "/login").permitAll()
+                                                // Swagger UI 접근 허용
+                                                .requestMatchers("/swagger-ui/**", "/swagger-ui.html",
+                                                                "/v3/api-docs/**", "/swagger-resources/**")
+                                                .permitAll()
                                                 // 멘토링 API - 검색/조회는 비인증 허용
                                                 .requestMatchers(org.springframework.http.HttpMethod.GET,
                                                                 "/api/mentors", "/api/mentors/**")
                                                 .permitAll()
                                                 .requestMatchers(org.springframework.http.HttpMethod.GET,
-                                                                "/api/mentoring-requests")
+                                                                "/api/mentoring-applications")
                                                 .permitAll()
                                                 // 멘토링 API - 신청/생성은 인증 필요
                                                 .requestMatchers("/api/mentors/apply", "/api/mentors/me")
                                                 .authenticated()
-                                                .requestMatchers("/api/mentoring-requests/**").authenticated()
+                                                .requestMatchers("/api/mentoring-applications/**").authenticated()
                                                 .requestMatchers("/api/mentoring/sessions/**").authenticated()
                                                 .anyRequest().authenticated())
                                 .exceptionHandling(exception -> exception
