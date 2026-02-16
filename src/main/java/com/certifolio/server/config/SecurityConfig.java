@@ -58,6 +58,8 @@ public class SecurityConfig {
                                                 .requestMatchers("/api/mentors/apply", "/api/mentors/me")
                                                 .authenticated()
                                                 .requestMatchers("/api/mentoring-applications/**").authenticated()
+                                                // 채팅 API - 테스트용 비인증 허용
+                                                .requestMatchers("/api/mentoring/sessions/*/chat/**").permitAll()
                                                 .requestMatchers("/api/mentoring/sessions/**").authenticated()
                                                 .anyRequest().authenticated())
                                 .exceptionHandling(exception -> exception

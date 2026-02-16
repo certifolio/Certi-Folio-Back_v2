@@ -27,10 +27,17 @@
 
         h1 {
             font-size: 1.5rem;
-            margin-bottom: 20px;
+            margin-bottom: 8px;
             background: linear-gradient(90deg, #06b6d4, #a855f7);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-bottom: 20px;
+            text-align: center;
         }
 
         .container {
@@ -55,6 +62,24 @@
             margin-bottom: 12px;
             text-transform: uppercase;
             letter-spacing: 0.05em;
+        }
+
+        .info-box {
+            background: rgba(6, 182, 212, 0.08);
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            font-size: 0.8rem;
+            line-height: 1.6;
+        }
+
+        .info-box code {
+            background: rgba(6, 182, 212, 0.15);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: #67e8f9;
         }
 
         .form-row {
@@ -133,6 +158,13 @@
             transform: none;
         }
 
+        .btn-history {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            font-size: 0.8rem;
+            padding: 6px 14px;
+        }
+
         .status {
             display: inline-flex;
             align-items: center;
@@ -165,6 +197,46 @@
 
         .status.disconnected .status-dot {
             background: #f87171;
+        }
+
+        .user-select {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .user-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid rgba(100, 116, 139, 0.3);
+            border-radius: 10px;
+            background: rgba(15, 23, 42, 0.4);
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .user-btn:hover {
+            border-color: rgba(6, 182, 212, 0.5);
+            color: #e2e8f0;
+        }
+
+        .user-btn.active {
+            border-color: #06b6d4;
+            background: rgba(6, 182, 212, 0.1);
+            color: #67e8f9;
+        }
+
+        .user-btn .name {
+            font-weight: 700;
+            font-size: 0.95rem;
+            margin-bottom: 2px;
+        }
+
+        .user-btn .role {
+            font-size: 0.75rem;
+            opacity: 0.7;
         }
 
         #chatBox {
@@ -234,7 +306,7 @@
         }
 
         #logBox {
-            height: 150px;
+            height: 120px;
             overflow-y: auto;
             background: rgba(15, 23, 42, 0.5);
             border-radius: 8px;
@@ -260,43 +332,80 @@
         .log-entry.info {
             color: #38bdf8;
         }
+
+        .tip {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-top: 8px;
+            padding: 8px;
+            background: rgba(168, 85, 247, 0.06);
+            border-radius: 6px;
+            border: 1px dashed rgba(168, 85, 247, 0.15);
+        }
     </style>
 </head>
 
 <body>
     <h1>🔌 Certi-Folio WebSocket 채팅 테스트</h1>
-    <div class="container">
+    <p class="subtitle">백엔드 채팅 기능 동작 확인용 페이지</p>
 
-        <!-- 연결 설정 -->
+    <div class="container">
+        <!-- 테스트 데이터 안내 -->
+        <div class="card">
+            <h2>📦 테스트 데이터 (자동 생성됨)</h2>
+            <div class="info-box">
+                👤 <strong>멘토:</strong> 김멘토 — Subject: <code>test:mentor1</code><br>
+                👤 <strong>멘티:</strong> 이멘티 — Subject: <code>test:mentee1</code><br>
+                💬 <strong>세션 ID:</strong> <code id="displaySessionId">로딩 중...</code>
+                <span id="sessionLoadStatus" style="margin-left:8px;"></span>
+            </div>
+            <div class="tip">
+                💡 <strong>양방향 테스트:</strong> 새 탭을 하나 더 열어서 다른 사용자로 접속하면 실시간 채팅을 확인할 수 있습니다.
+            </div>
+        </div>
+
+        <!-- 사용자 선택 + 연결 -->
         <div class="card">
             <div style="display:flex; align-items:center;">
-                <h2>1. WebSocket 연결</h2>
+                <h2>1. 사용자 선택 & 연결</h2>
                 <div id="statusBadge" class="status disconnected">
                     <span class="status-dot"></span>
                     <span id="statusText">연결 안 됨</span>
                 </div>
             </div>
-            <div class="form-row">
-                <label>서버 주소</label>
-                <input id="serverUrl" value="http://localhost:8080/ws-stomp" readonly />
+
+            <div class="user-select">
+                <div class="user-btn active" id="btnMentor" onclick="selectUser('test:mentor1', '김멘토', this)">
+                    <div class="name">👨‍🏫 김멘토</div>
+                    <div class="role">test:mentor1</div>
+                </div>
+                <div class="user-btn" id="btnMentee" onclick="selectUser('test:mentee1', '이멘티', this)">
+                    <div class="name">👩‍🎓 이멘티</div>
+                    <div class="role">test:mentee1</div>
+                </div>
             </div>
-            <div class="form-row">
+
+            <div class="form-row" style="display:none;">
                 <label>Sender Subject</label>
-                <input id="senderSubject" value="test:user1" placeholder="provider:providerId" />
+                <input id="senderSubject" value="test:mentor1" />
             </div>
-            <div class="form-row">
+            <div class="form-row" style="display:none;">
                 <label>세션 ID</label>
                 <input id="sessionId" type="number" value="1" min="1" />
             </div>
+
             <div class="form-row" style="justify-content: flex-end; gap: 8px;">
-                <button id="btnConnect" class="btn-connect" onclick="connect()">연결</button>
+                <button id="btnConnect" class="btn-connect" onclick="connect()">🔌 연결</button>
                 <button id="btnDisconnect" class="btn-disconnect" onclick="disconnect()" disabled>해제</button>
             </div>
         </div>
 
         <!-- 채팅 영역 -->
         <div class="card">
-            <h2>2. 채팅</h2>
+            <div style="display:flex; align-items:center; margin-bottom:12px;">
+                <h2 style="margin-bottom:0;">2. 채팅</h2>
+                <button class="btn-history" onclick="loadChatHistory()" style="margin-left:auto;">📜 기록 불러오기</button>
+            </div>
             <div id="chatBox"></div>
             <div class="form-row">
                 <input id="messageInput" placeholder="메시지를 입력하세요..."
@@ -315,6 +424,26 @@
     <script>
         let stompClient = null;
         let connected = false;
+        let currentUserName = '김멘토';
+
+        // 세션 ID 가져오기 (서버에서 동적으로)
+        window.addEventListener('DOMContentLoaded', () => {
+            // 세션 목록에서 첫 번째 세션 ID를 가져오기 어려우므로 기본값 사용
+            // data.sql이나 CommandLineRunner가 생성한 세션의 ID는 1부터 시작
+            document.getElementById('displaySessionId').textContent = '1 (기본값)';
+            document.getElementById('sessionLoadStatus').textContent = '✅';
+        });
+
+        function selectUser(subject, name, btn) {
+            document.getElementById('senderSubject').value = subject;
+            currentUserName = name;
+            document.querySelectorAll('.user-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            if (connected) {
+                disconnect();
+                setTimeout(() => connect(), 500);
+            }
+        }
 
         function log(message, type = '') {
             const logBox = document.getElementById('logBox');
@@ -335,26 +464,26 @@
         }
 
         function connect() {
-            const serverUrl = document.getElementById('serverUrl').value;
+            const serverUrl = 'http://localhost:8080/ws-stomp';
             const sessionId = document.getElementById('sessionId').value;
             const senderSubject = document.getElementById('senderSubject').value;
 
-            log(`연결 시도... ${serverUrl}`, 'info');
+            log(`${currentUserName}(${senderSubject})로 연결 시도...`, 'info');
 
             const socket = new SockJS(serverUrl);
             stompClient = Stomp.over(socket);
 
-            // STOMP 디버그 로그
+            // STOMP 디버그 로그 (필터링)
             stompClient.debug = function (str) {
-                if (str.indexOf('PING') === -1 && str.indexOf('PONG') === -1) {
-                    log(`STOMP: ${str}`);
+                if (str && str.indexOf('PING') === -1 && str.indexOf('PONG') === -1
+                    && str.indexOf('>>>') === -1 && str.indexOf('<<<') === -1) {
+                    // 너무 많은 로그는 필터
                 }
             };
 
             stompClient.connect({}, function (frame) {
                 setStatus(true);
-                log('✅ WebSocket 연결 성공!', 'success');
-                log(`Frame: ${frame}`, 'info');
+                log(`✅ ${currentUserName}로 연결 성공!`, 'success');
 
                 // 채팅 토픽 구독
                 const topic = `/topic/chat.${sessionId}`;
@@ -372,7 +501,7 @@
                     senderSubject: senderSubject
                 };
                 stompClient.send(`/app/chat.join/${sessionId}`, {}, JSON.stringify(joinPayload));
-                log(`🚪 입장 메시지 전송 (sessionId: ${sessionId})`, 'info');
+                log(`🚪 입장 메시지 전송`, 'info');
 
             }, function (error) {
                 setStatus(false);
@@ -406,7 +535,7 @@
             };
 
             stompClient.send(`/app/chat.send/${sessionId}`, {}, JSON.stringify(payload));
-            log(`📤 메시지 전송: "${content}"`, 'info');
+            log(`📤 전송: "${content}"`, 'info');
             input.value = '';
             input.focus();
         }
@@ -418,7 +547,7 @@
             let className = 'other';
             if (msg.type === 'SYSTEM') {
                 className = 'system';
-            } else if (msg.mine) {
+            } else if (msg.senderName === currentUserName) {
                 className = 'mine';
             }
 
@@ -428,7 +557,7 @@
             if (msg.type !== 'SYSTEM' && className !== 'mine') {
                 html += `<div class="sender">${msg.senderName || 'Unknown'}</div>`;
             }
-            html += `<div>${msg.content}</div>`;
+            html += `<div>${escapeHtml(msg.content)}</div>`;
             if (time) {
                 html += `<div class="time">${time}</div>`;
             }
@@ -436,8 +565,38 @@
 
             chatBox.innerHTML += html;
             chatBox.scrollTop = chatBox.scrollHeight;
+        }
 
-            log(`📨 수신: [${msg.type}] ${msg.senderName || 'System'}: ${msg.content}`, 'success');
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function loadChatHistory() {
+            const sessionId = document.getElementById('sessionId').value;
+            log(`� 채팅 기록 불러오는 중... (sessionId: ${sessionId})`, 'info');
+
+            try {
+                const res = await fetch(`/api/mentoring/sessions/${sessionId}/chat/recent`);
+                if (!res.ok) {
+                    log(`❌ 채팅 기록 조회 실패: HTTP ${res.status}`, 'error');
+                    return;
+                }
+                const data = await res.json();
+                log(`✅ 채팅 기록 ${data.totalCount}건 로드 완료`, 'success');
+
+                // 기존 메시지 클리어 후 표시
+                document.getElementById('chatBox').innerHTML = '';
+                if (data.messages && data.messages.length > 0) {
+                    data.messages.forEach(msg => displayMessage(msg));
+                } else {
+                    document.getElementById('chatBox').innerHTML =
+                        '<div style="text-align:center;color:#64748b;padding:20px;font-size:0.85rem;">채팅 기록이 없습니다. 메시지를 보내보세요!</div>';
+                }
+            } catch (e) {
+                log(`❌ 에러: ${e.message}`, 'error');
+            }
         }
     </script>
 </body>

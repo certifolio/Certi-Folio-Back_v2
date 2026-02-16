@@ -15,8 +15,6 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-
 @RestController
 @RequiredArgsConstructor
 @Slf4j
@@ -84,11 +82,9 @@ public class ChatController {
             @AuthenticationPrincipal Object principal) {
 
         User user = AuthUtils.resolveUser(principal, userRepository);
-        if (user == null) {
-            return ResponseEntity.status(401).body(Map.of("success", false, "message", "인증이 필요합니다."));
-        }
+        Long userId = (user != null) ? user.getId() : null;
 
-        ChatMessageDTO.ChatHistoryResponse history = chatService.getChatHistory(sessionId, user.getId());
+        ChatMessageDTO.ChatHistoryResponse history = chatService.getChatHistory(sessionId, userId);
         return ResponseEntity.ok(history);
     }
 
@@ -102,11 +98,9 @@ public class ChatController {
             @AuthenticationPrincipal Object principal) {
 
         User user = AuthUtils.resolveUser(principal, userRepository);
-        if (user == null) {
-            return ResponseEntity.status(401).body(Map.of("success", false, "message", "인증이 필요합니다."));
-        }
+        Long userId = (user != null) ? user.getId() : null;
 
-        ChatMessageDTO.ChatHistoryResponse history = chatService.getRecentMessages(sessionId, user.getId());
+        ChatMessageDTO.ChatHistoryResponse history = chatService.getRecentMessages(sessionId, userId);
         return ResponseEntity.ok(history);
     }
 
