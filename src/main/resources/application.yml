@@ -73,5 +73,6 @@ jwt:
 
 app:
   oauth2:
+    redirect-uri: http://localhost:3000/auth/callback
     authorized-redirect-uris:
       - http://localhost:3000/auth/callback

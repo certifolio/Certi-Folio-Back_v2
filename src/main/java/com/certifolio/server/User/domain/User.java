@@ -62,6 +62,12 @@ public class User {
     @Column(length = 500)
     private String bio;
 
+    @Column(nullable = false)
+    private boolean isInfoInputted = false; // Default false
+
+    @Column(nullable = false)
+    private boolean isAdmin = false; // Default false
+
     @Builder
     public User(String name, String email, String picture, Role role, String provider, String providerId,
             String nickname) {
@@ -110,6 +116,11 @@ public class User {
             this.company = company;
         if (bio != null)
             this.bio = bio;
+    }
+
+    public void updateBasicInfo(String name, boolean isInfoInputted) {
+        if (name != null) this.name = name;
+        this.isInfoInputted = isInfoInputted;
     }
 
     public String getRoleKey() {

@@ -52,6 +52,8 @@ public class UserController {
         data.put("year", user.getYear());
         data.put("company", user.getCompany());
         data.put("bio", user.getBio());
+        data.put("isInfoInputted", user.isInfoInputted());
+        data.put("isAdmin", user.isAdmin());
         data.put("interests", new String[] {}); // Can be extended later
 
         return ResponseEntity.ok(Map.of("success", true, "data", data));
@@ -227,9 +229,27 @@ public class UserController {
             return ResponseEntity.status(401).body(Map.of("success", false, "message", "User not found"));
         }
 
-        userRepository.delete(user);
-
         return ResponseEntity.ok(Map.of("success", true, "message", "Account deleted successfully"));
+    }
+
+    /**
+     * 기본 정보 업데이트 (이름, 정보 입력 완료 여부)
+     */
+    @PatchMapping("/basic-info")
+    public ResponseEntity<?> updateBasicInfo(@AuthenticationPrincipal Object principal,
+                                             @RequestBody Map<String, Object> body) {
+        User user = getUser(principal);
+        if (user == null) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "message", "User not found"));
+        }
+
+        String name = (String) body.get("name");
+        Boolean isInfoInputted = (Boolean) body.get("isInfoInputted");
+
+        user.updateBasicInfo(name, isInfoInputted != null ? isInfoInputted : true);
+        userRepository.save(user);
+
+        return ResponseEntity.ok(Map.of("success", true, "message", "Basic info updated"));
     }
 
     private User getUser(Object principal) {

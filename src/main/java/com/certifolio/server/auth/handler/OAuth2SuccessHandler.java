@@ -7,6 +7,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -23,6 +24,9 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
+
+    @Value("${app.oauth2.redirect-uri:http://localhost:3000/auth/callback}")
+    private String redirectBaseUri;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -59,7 +63,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         // Always create token with provider:providerId format
         String token = jwtTokenProvider.createToken(registrationId, String.valueOf(id), "ROLE_USER");
 
-        String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/auth/callback")
+        String targetUrl = UriComponentsBuilder.fromUriString(redirectBaseUri)
                 .queryParam("token", token)
                 .build().toUriString();
 
