@@ -2,8 +2,8 @@ package com.certifolio.server.Mentoring.service;
 
 import com.certifolio.server.Mentoring.domain.*;
 import com.certifolio.server.User.domain.User;
-import com.certifolio.server.Career.dto.CareerDTO;
-import com.certifolio.server.User.dto.EducationDTO;
+import com.certifolio.server.Form.Career.dto.CareerDTO;
+import com.certifolio.server.Form.Education.dto.EducationDTO;
 import com.certifolio.server.Mentoring.dto.MentorDTO;
 import com.certifolio.server.Mentoring.repository.*;
 import com.certifolio.server.User.repository.UserRepository;

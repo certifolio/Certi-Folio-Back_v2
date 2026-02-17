@@ -2,8 +2,8 @@ package com.certifolio.server.Notification.scheduler;
 
 import com.certifolio.server.Notification.domain.NotificationType;
 import com.certifolio.server.Notification.service.NotificationService;
-import com.certifolio.server.User.domain.Certificate;
-import com.certifolio.server.User.repository.CertificateRepository;
+import com.certifolio.server.Form.Certificate.domain.Certificate;
+import com.certifolio.server.Form.Certificate.repository.CertificateRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

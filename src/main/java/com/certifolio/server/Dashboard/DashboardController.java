@@ -2,7 +2,7 @@ package com.certifolio.server.Dashboard;
 
 import com.certifolio.server.User.domain.User;
 import com.certifolio.server.User.repository.UserRepository;
-import com.certifolio.server.User.service.PortfolioServiceImpl;
+import com.certifolio.server.Form.service.PortfolioServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

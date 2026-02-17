@@ -3,7 +3,7 @@ package com.certifolio.server.Analytics.service;
 import com.certifolio.server.Analytics.domain.CareerPreference;
 import com.certifolio.server.User.domain.User;
 import com.certifolio.server.Mentoring.dto.CareerPreferenceDTO;
-import com.certifolio.server.Career.repository.CareerPreferenceRepository;
+import com.certifolio.server.Analytics.repository.CareerPreferenceRepository;
 import com.certifolio.server.User.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

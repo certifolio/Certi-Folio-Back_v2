@@ -1,11 +1,11 @@
 package com.certifolio.server.User.service;
 
 import com.certifolio.server.User.domain.User;
-import com.certifolio.server.User.dto.EducationDTO;
-import com.certifolio.server.Career.dto.CareerDTO;
+import com.certifolio.server.Form.Education.dto.EducationDTO;
+import com.certifolio.server.Form.Career.dto.CareerDTO;
 import com.certifolio.server.User.repository.UserRepository;
-import com.certifolio.server.User.repository.EducationRepository;
-import com.certifolio.server.Career.repository.CareerRepository;
+import com.certifolio.server.Form.Education.repository.EducationRepository;
+import com.certifolio.server.Form.Career.repository.CareerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
