@@ -4,10 +4,10 @@ import com.certifolio.server.Form.Education.domain.Education;
 import com.certifolio.server.User.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
+import java.util.Optional;
 
 public interface EducationRepository extends JpaRepository<Education, Long> {
-    List<Education> findAllByUser(User user);
+    Optional<Education> findByUser(User user);
 
-    List<Education> findByUserId(Long userId);
+    Optional<Education> findByUserId(Long userId);
 }

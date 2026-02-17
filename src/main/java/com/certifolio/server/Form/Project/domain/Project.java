@@ -26,16 +26,16 @@ public class Project {
     @Column(nullable = false)
     private String name;
 
+    @Column(nullable = false)
     private String type; // personal, team, etc.
 
+    @Column(nullable = false)
     private String role;
 
-    private String teamSize;
-
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String techStack;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String description;
 
     private String githubLink;
@@ -44,19 +44,34 @@ public class Project {
 
     private String result;
 
+    @Column(nullable = false)
     private LocalDate startDate;
 
+    @Column(nullable = false)
     private LocalDate endDate;
 
     @Builder
-    public Project(User user, String name, String type, String role, String teamSize, String techStack,
-            String description, String githubLink, String demoLink, String result, LocalDate startDate,
-            LocalDate endDate) {
+    public Project(User user, String name, String type, String role, String techStack,
+                   String description, String githubLink, String demoLink, String result, LocalDate startDate,
+                   LocalDate endDate) {
         this.user = user;
         this.name = name;
         this.type = type;
         this.role = role;
-        this.teamSize = teamSize;
+        this.techStack = techStack;
+        this.description = description;
+        this.githubLink = githubLink;
+        this.demoLink = demoLink;
+        this.result = result;
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
+
+    public void update(String name, String type, String role, String techStack, String description,
+                        String githubLink, String demoLink, String result, LocalDate startDate, LocalDate endDate) {
+        this.name = name;
+        this.type = type;
+        this.role = role;
         this.techStack = techStack;
         this.description = description;
         this.githubLink = githubLink;

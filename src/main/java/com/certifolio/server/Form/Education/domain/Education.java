@@ -24,42 +24,50 @@ public class Education {
     private User user;
 
     @Column(nullable = false)
-    private String type; // university, highschool, etc.
-
     private String schoolName;
 
+    @Column(nullable = false)
     private String major;
 
-    private String degree;
+    @Column(nullable = false)
+    private String degree; // 학사, 전문학사, 석사, 박사
 
-    private String status; // enrolled, graduated, etc.
+    @Column(nullable = false)
+    private String status; // 재학, 휴학, 졸업, 졸업예정
 
+    @Column(nullable = false)
     private LocalDate startDate;
 
+    @Column(nullable = false)
     private LocalDate endDate;
-
-    private boolean isCurrent;
 
     private Double gpa;
 
     private Double maxGpa;
 
-    private String location;
-
     @Builder
-    public Education(User user, String type, String schoolName, String major, String degree, String status,
-            LocalDate startDate, LocalDate endDate, boolean isCurrent, Double gpa, Double maxGpa, String location) {
+    public Education(User user, String schoolName, String major, String degree, String status,
+                     LocalDate startDate, LocalDate endDate, Double gpa, Double maxGpa) {
         this.user = user;
-        this.type = type;
         this.schoolName = schoolName;
         this.major = major;
         this.degree = degree;
         this.status = status;
         this.startDate = startDate;
         this.endDate = endDate;
-        this.isCurrent = isCurrent;
         this.gpa = gpa;
         this.maxGpa = maxGpa;
-        this.location = location;
+    }
+
+    public void update(String schoolName, String major, String degree, String status, LocalDate startDate,
+                       LocalDate endDate, Double gpa, Double maxGpa) {
+        this.schoolName = schoolName;
+        this.major = major;
+        this.degree = degree;
+        this.status = status;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.gpa = gpa;
+        this.maxGpa = maxGpa;
     }
 }

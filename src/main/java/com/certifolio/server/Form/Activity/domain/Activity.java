@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -24,32 +26,44 @@ public class Activity {
     @Column(nullable = false)
     private String name;
 
+    @Column(nullable = false)
     private String type;
 
-    private String organizer;
-
+    @Column(nullable = false)
     private String role;
 
-    private String period; // e.g., "2023.01 - 2023.06"
+    @Column(nullable = false)
+    private LocalDate startDate;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(nullable = false)
+    private LocalDate endDate;
+
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String description;
-
-    private String link;
 
     private String result;
 
     @Builder
-    public Activity(User user, String name, String type, String organizer, String role, String period,
-                    String description, String link, String result) {
+    public Activity(User user, String name, String type, String role, LocalDate startDate, LocalDate endDate,
+                    String description, String result) {
         this.user = user;
         this.name = name;
         this.type = type;
-        this.organizer = organizer;
         this.role = role;
-        this.period = period;
+        this.startDate = startDate;
+        this.endDate = endDate;
         this.description = description;
-        this.link = link;
+        this.result = result;
+    }
+
+    public void update(String name, String type, String role, LocalDate startDate, LocalDate endDate,
+                       String description, String result) {
+        this.name = name;
+        this.type = type;
+        this.role = role;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.description = description;
         this.result = result;
     }
 }

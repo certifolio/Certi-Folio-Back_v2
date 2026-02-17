@@ -2,10 +2,7 @@ package com.certifolio.server.Form.Career.domain;
 
 import com.certifolio.server.User.domain.User;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDate;
 
@@ -23,42 +20,43 @@ public class Career {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Column(nullable = false)
+    private String type; // 인턴쉽, 정규/계약직
+
+    @Column(nullable = false)
     private String company;
 
-    private String position;
+    private String position; // 정규/계약직에만 존재 (nullable)
 
-    private String department;
-
-    private String type; // intern, fulltime, etc.
-
+    @Column(nullable = false)
     private LocalDate startDate;
 
+    @Column(nullable = false)
     private LocalDate endDate;
 
-    private boolean isCurrent;
-
-    private String location; // added to match CareerItem
-
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String description; // Simplify list<string> to unified text for DB or use converter if needed.
     // For now assuming joined string or simple text block as per basic requirement.
 
-    @Column(columnDefinition = "TEXT")
-    private String skills; // joined string
-
     @Builder
-    public Career(User user, String company, String position, String department, String type, LocalDate startDate,
-            LocalDate endDate, boolean isCurrent, String location, String description, String skills) {
+    public Career(User user, String type, String company, String position, LocalDate startDate,
+                  LocalDate endDate, String description) {
         this.user = user;
+        this.type = type;
         this.company = company;
         this.position = position;
-        this.department = department;
-        this.type = type;
         this.startDate = startDate;
         this.endDate = endDate;
-        this.isCurrent = isCurrent;
-        this.location = location;
         this.description = description;
-        this.skills = skills;
+    }
+
+    public void update(String type, String company, String position, LocalDate startDate,
+                       LocalDate endDate, String description) {
+        this.type = type;
+        this.company = company;
+        this.position = position;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.description = description;
     }
 }
