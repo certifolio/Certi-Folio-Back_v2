@@ -104,6 +104,6 @@ public class Mentor {
     }
 
     public String getName() {
-        return user != null ? user.getNickname() : null;
+        return user != null ? user.getName() : null;
     }
 }

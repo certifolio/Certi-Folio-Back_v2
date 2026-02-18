@@ -60,7 +60,6 @@ public class AnalyticsService {
                 .map(p -> CareerPreferenceDTO.builder()
                         .jobRole(p.getJobRole())
                         .companyType(p.getCompanyType())
-                        .targetCompany(p.getTargetCompany())
                         .updatedAt(p.getUpdatedAt() != null ? p.getUpdatedAt().toString()
                                 : null)
                         .build());
@@ -76,7 +75,6 @@ public class AnalyticsService {
 
         pref.setJobRole(dto.getJobRole());
         pref.setCompanyType(dto.getCompanyType());
-        pref.setTargetCompany(dto.getTargetCompany());
 
         preferenceRepository.save(pref);
     }

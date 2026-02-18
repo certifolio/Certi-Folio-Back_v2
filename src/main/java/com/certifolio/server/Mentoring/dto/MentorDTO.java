@@ -179,7 +179,7 @@ public class MentorDTO {
         public static ReviewItem from(MentorReview review) {
             return ReviewItem.builder()
                     .id(review.getId())
-                    .reviewer(review.getReviewer().getNickname())
+                    .reviewer(review.getReviewer().getName())
                     .rating(review.getRating())
                     .date(review.getCreatedAt().toLocalDate().toString())
                     .content(review.getContent())

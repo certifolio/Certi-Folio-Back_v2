@@ -77,7 +77,7 @@ public class MentoringApplicationService {
                         mentor.getUser(),
                         NotificationType.MENTORING,
                         "새로운 멘토링 신청",
-                        mentee.getNickname() + "님이 멘토링을 신청했습니다.",
+                        mentee.getName() + "님이 멘토링을 신청했습니다.",
                         "/mentoring/received" // 받은 신청 목록으로 이동
                 );
 
@@ -184,7 +184,7 @@ public class MentoringApplicationService {
                         application.getMentee(),
                         NotificationType.MENTORING,
                         "멘토링 신청 승인",
-                        mentor.getUser().getNickname() + " 멘토님이 멘토링 신청을 승인했습니다.",
+                        mentor.getUser().getName() + " 멘토님이 멘토링 신청을 승인했습니다.",
                         "/mentoring/session/" + session.getId() // 생성된 세션으로 이동
                 );
 
@@ -237,7 +237,7 @@ public class MentoringApplicationService {
                         application.getMentee(),
                         NotificationType.MENTORING,
                         "멘토링 신청 거절",
-                        mentor.getUser().getNickname() + " 멘토님이 멘토링 신청을 거절했습니다.",
+                        mentor.getUser().getName() + " 멘토님이 멘토링 신청을 거절했습니다.",
                         "/mentoring/sent" // 보낸 신청 목록으로 이동
                 );
 

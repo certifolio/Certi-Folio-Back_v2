@@ -2,66 +2,63 @@ package com.certifolio.server.auth.jwt;
 
 import com.certifolio.server.User.domain.User;
 import com.certifolio.server.User.repository.UserRepository;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 
+@Slf4j
 @RequiredArgsConstructor
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
-    private final UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        String uri = request.getRequestURI();
-        String authHeader = request.getHeader("Authorization");
+        
+        String path = request.getRequestURI();
+        
+        try {
+            String token = resolveToken(request);
+            
+            if (StringUtils.hasText(token)) {
+                if(jwtTokenProvider.validateToken(token)) {
+                    String subject = jwtTokenProvider.getSubject(token);
+                    String role = jwtTokenProvider.getRole(token); 
+                    
+                    System.out.println("JwtAuthenticationFilter: Token valid. Subject=" + subject + ", Role=" + role);
 
-        // Log for profile endpoint specifically
-        if (uri.contains("/portfolio/profile")) {
-            System.out.println("=== DEBUG /api/portfolio/profile ===");
-            System.out.println("Authorization header present: " + (authHeader != null));
-            if (authHeader != null) {
-                System.out.println("Authorization header starts with Bearer: " + authHeader.startsWith("Bearer "));
-                System.out.println("Token length: " + (authHeader.length() > 7 ? authHeader.substring(7).length() : 0));
-            }
-        }
-
-        String token = resolveToken(request);
-
-        if (token != null) {
-            System.out.println("JwtAuthenticationFilter: Token found for URI: " + uri);
-            if (jwtTokenProvider.validateToken(token)) {
-                System.out.println("JwtAuthenticationFilter: Token is valid");
-                String subject = jwtTokenProvider.getSubject(token);
-                System.out.println("JwtAuthenticationFilter: Subject = " + subject);
-                Authentication authentication = new UsernamePasswordAuthenticationToken(subject, "",
-                        Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                    Authentication authentication = new UsernamePasswordAuthenticationToken(subject, "",
+                            Collections.singletonList(new SimpleGrantedAuthority(role != null ? role : "ROLE_USER")));
+                    
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                } else {
+                    System.out.println("JwtAuthenticationFilter: Token validation failed for " + path);
+                }
             } else {
-                System.out.println("JwtAuthenticationFilter: Token validation failed for URI: " + uri);
+                 if (path.startsWith("/api")) {
+                     System.out.println("JwtAuthenticationFilter: No token found for " + path);
+                 }
             }
-        } else {
-            if (uri.contains("/api/")) {
-                System.out.println("JwtAuthenticationFilter: No token found for API URI: " + uri);
-            }
+        } catch (Exception ex) {
+            log.error("Could not set user authentication in security context", ex);
+            System.out.println("JwtAuthenticationFilter: Exception " + ex.getMessage());
         }
 
         filterChain.doFilter(request, response);
