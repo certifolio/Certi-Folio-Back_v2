@@ -3,12 +3,11 @@ package com.certifolio.server.Notification.controller;
 import com.certifolio.server.Notification.dto.NotificationDTO;
 import com.certifolio.server.Notification.service.NotificationService;
 import com.certifolio.server.User.domain.User;
-import com.certifolio.server.User.repository.UserRepository;
+import com.certifolio.server.User.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -18,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 public class NotificationController {
 
     private final NotificationService notificationService;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     /**
      * 알림 목록 조회 (페이지네이션)
@@ -132,25 +131,7 @@ public class NotificationController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Principal에서 User 조회 (MentorController와 동일한 패턴)
-     */
     private User getUser(Object principal) {
-        String subject = null;
-        if (principal instanceof UserDetails) {
-            subject = ((UserDetails) principal).getUsername();
-        } else if (principal instanceof String) {
-            subject = (String) principal;
-        }
-
-        if (subject == null) return null;
-
-        // Token subject is always "provider:providerId" format
-        if (subject.contains(":")) {
-            String[] parts = subject.split(":", 2);
-            return userRepository.findByProviderAndProviderId(parts[0], parts[1]).orElse(null);
-        }
-
-        return null;
+        return userService.getByPrincipal(principal);
     }
 }

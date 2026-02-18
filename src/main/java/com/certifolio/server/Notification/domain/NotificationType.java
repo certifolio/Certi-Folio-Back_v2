@@ -4,14 +4,10 @@ package com.certifolio.server.Notification.domain;
  * 알림 유형
  */
 public enum NotificationType {
-    MENTORING,
-    CERTIFICATE,
     JOB,
-    STUDY,
+    MENTORING,
     SYSTEM,
-    ANALYSIS,
-    COMMENT,
-    LIKE;
+    CERTIFICATE;
 
     /**
      * 프론트엔드에서 사용하는 소문자 형식으로 변환
