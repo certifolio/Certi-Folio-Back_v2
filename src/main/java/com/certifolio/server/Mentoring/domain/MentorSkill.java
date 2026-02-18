@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 /**
- * 멘토 스킬/전문 분야 엔티티
+ * 멘토 스킬/전문 분야 엔티티 (통합시키기)
  */
 @Entity
 @Table(name = "mentor_skills")

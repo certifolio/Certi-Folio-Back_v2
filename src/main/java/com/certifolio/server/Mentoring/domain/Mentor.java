@@ -38,26 +38,8 @@ public class Mentor {
     @Column(columnDefinition = "TEXT")
     private String bio; // 자기소개
 
-    private String location; // 위치
-    private String price; // 멘토링 비용 (예: "무료", "시간당 5만원")
-    private String profileImage; // 프로필 이미지 URL
-
-    @Builder.Default
-    @Column(nullable = false)
-    private boolean verified = false; // 인증 여부
-
-    @Builder.Default
-    private Integer menteeCapacity = 5; // 수용 가능 멘티 수
     @Builder.Default
     private String preferredFormat = "both"; // 선호 형식 (online/offline/both)
-
-    @Builder.Default
-    @Column(nullable = false)
-    private Double rating = 0.0; // 평균 평점
-
-    @Builder.Default
-    @Column(nullable = false)
-    private Integer reviewCount = 0; // 리뷰 수
 
     @Builder.Default
     @Enumerated(EnumType.STRING)
@@ -71,10 +53,6 @@ public class Mentor {
     @OneToMany(mappedBy = "mentor", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<MentorAvailability> availabilities = new ArrayList<>();
-
-    @OneToMany(mappedBy = "mentor", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<MentorReview> reviews = new ArrayList<>();
 
     @Column(nullable = false)
     private LocalDateTime createdAt;

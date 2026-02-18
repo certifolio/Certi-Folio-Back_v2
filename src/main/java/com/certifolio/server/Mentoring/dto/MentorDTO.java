@@ -1,8 +1,6 @@
 package com.certifolio.server.Mentoring.dto;
 
 import com.certifolio.server.Mentoring.domain.Mentor;
-import com.certifolio.server.Mentoring.domain.MentorAvailability;
-import com.certifolio.server.Mentoring.domain.MentorReview;
 import com.certifolio.server.Mentoring.domain.MentorSkill;
 import com.certifolio.server.Form.Career.dto.CareerDTO;
 import com.certifolio.server.Form.Education.dto.EducationDTO;
@@ -44,13 +42,7 @@ public class MentorDTO {
         private String title;
         private String company;
         private String experience;
-        private Double rating;
-        private Integer reviews;
         private List<String> skills;
-        private String location;
-        private String price;
-        private String image;
-        private boolean verified;
         private String description;
 
         public static MentorListItem from(Mentor mentor) {
@@ -60,15 +52,9 @@ public class MentorDTO {
                     .title(mentor.getTitle())
                     .company(mentor.getCompany())
                     .experience(mentor.getExperience())
-                    .rating(mentor.getRating())
-                    .reviews(mentor.getReviewCount())
                     .skills(mentor.getSkills().stream()
                             .map(MentorSkill::getSkillName)
                             .collect(Collectors.toList()))
-                    .location(mentor.getLocation())
-                    .price(mentor.getPrice())
-                    .image(mentor.getProfileImage())
-                    .verified(mentor.isVerified())
                     .description(mentor.getBio() != null
                             ? (mentor.getBio().length() > 100 ? mentor.getBio().substring(0, 100) + "..."
                                     : mentor.getBio())
@@ -90,21 +76,14 @@ public class MentorDTO {
         private String title;
         private String company;
         private String experience;
-        private Double rating;
-        private Integer reviews;
         private List<String> skills;
-        private String location;
-        private String price;
-        private String image;
-        private boolean verified;
         private String bio;
         private List<EducationDTO> education;
         private List<CareerDTO> career;
         private List<String> achievements;
         private List<SpecialtyItem> specialties;
         private List<TimeSlotItem> availableSlots;
-        private List<ReviewItem> reviewList;
-        private ResponseStats responseStats;
+        private String status;
 
         public static MentorProfileResponse from(Mentor mentor, List<EducationDTO> education, List<CareerDTO> career) {
             return MentorProfileResponse.builder()
@@ -113,15 +92,10 @@ public class MentorDTO {
                     .title(mentor.getTitle())
                     .company(mentor.getCompany())
                     .experience(mentor.getExperience())
-                    .rating(mentor.getRating())
-                    .reviews(mentor.getReviewCount())
+                    .status(mentor.getStatus() != null ? mentor.getStatus().name() : null)
                     .skills(mentor.getSkills().stream()
                             .map(MentorSkill::getSkillName)
                             .collect(Collectors.toList()))
-                    .location(mentor.getLocation())
-                    .price(mentor.getPrice())
-                    .image(mentor.getProfileImage())
-                    .verified(mentor.isVerified())
                     .bio(mentor.getBio())
                     .education(education)
                     .career(career)
@@ -132,15 +106,6 @@ public class MentorDTO {
                     .availableSlots(mentor.getAvailabilities().stream()
                             .map(a -> new TimeSlotItem(a.getDate(), a.getTime(), a.getSlotType()))
                             .collect(Collectors.toList()))
-                    .reviewList(mentor.getReviews().stream()
-                            .map(ReviewItem::from)
-                            .collect(Collectors.toList()))
-                    .responseStats(ResponseStats.builder()
-                            .averageResponseTime("24시간 이내")
-                            .responseRate(95)
-                            .repeatRate(80)
-                            .totalMentoring(mentor.getReviewCount())
-                            .build())
                     .build();
         }
     }
@@ -164,41 +129,6 @@ public class MentorDTO {
         private String type;
     }
 
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class ReviewItem {
-        private Long id;
-        private String reviewer;
-        private Integer rating;
-        private String date;
-        private String content;
-        private Integer helpful;
-
-        public static ReviewItem from(MentorReview review) {
-            return ReviewItem.builder()
-                    .id(review.getId())
-                    .reviewer(review.getReviewer().getName())
-                    .rating(review.getRating())
-                    .date(review.getCreatedAt().toLocalDate().toString())
-                    .content(review.getContent())
-                    .helpful(review.getHelpfulCount())
-                    .build();
-        }
-    }
-
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class ResponseStats {
-        private String averageResponseTime;
-        private int responseRate;
-        private int repeatRate;
-        private Integer totalMentoring;
-    }
-
     /**
      * 멘토 신청 요청
      */
@@ -212,7 +142,6 @@ public class MentorDTO {
         private String experience;
         private List<String> expertise;
         private String bio;
-        private String menteeCapacity;
         private List<String> availability;
         private String preferredFormat;
         private List<String> certificates;

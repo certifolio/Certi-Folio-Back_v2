@@ -12,5 +12,6 @@ import lombok.NoArgsConstructor;
 public class CareerPreferenceDTO {
     private String jobRole;
     private String companyType;
+    private String targetCompany;
     private String updatedAt;
 }

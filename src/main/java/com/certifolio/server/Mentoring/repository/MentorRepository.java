@@ -22,15 +22,9 @@ public interface MentorRepository extends JpaRepository<Mentor, Long> {
 
     List<Mentor> findByStatus(MentorStatus status);
 
-    @Query("SELECT m FROM Mentor m WHERE m.status = :status ORDER BY m.rating DESC")
-    List<Mentor> findByStatusOrderByRatingDesc(@Param("status") MentorStatus status);
-
     @Query("SELECT m FROM Mentor m JOIN m.skills s WHERE s.skillName IN :skills AND m.status = 'APPROVED'")
     List<Mentor> findBySkillsContaining(@Param("skills") List<String> skills);
 
-    @Query("SELECT m FROM Mentor m WHERE m.location = :location AND m.status = 'APPROVED'")
-    List<Mentor> findByLocation(@Param("location") String location);
-
-    @Query("SELECT m FROM Mentor m WHERE m.status = 'APPROVED' ORDER BY m.rating DESC, m.reviewCount DESC")
+    @Query("SELECT m FROM Mentor m WHERE m.status = 'APPROVED' ORDER BY m.createdAt DESC")
     List<Mentor> findTopMentors();
 }
