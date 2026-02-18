@@ -7,7 +7,7 @@ public enum NotificationType {
     JOB,
     MENTORING,
     SYSTEM,
-    CERTIFICATE,
+    CERTIFICATE;
 
     /**
      * 프론트엔드에서 사용하는 소문자 형식으로 변환
