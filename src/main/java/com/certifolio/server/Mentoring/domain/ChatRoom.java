@@ -3,20 +3,22 @@ package com.certifolio.server.Mentoring.domain;
 import com.certifolio.server.User.domain.User;
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
- * 멘토링 세션 엔티티
+ * 채팅방 엔티티
+ * 멘토와 유저 간 1:1 채팅방 (멘토링 세션과 독립적)
  */
 @Entity
-@Table(name = "mentoring_sessions")
+@Table(name = "chat_rooms", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "mentor_id", "user_id" })
+})
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MentoringSession {
+public class ChatRoom {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,33 +29,17 @@ public class MentoringSession {
     private Mentor mentor;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "mentee_id", nullable = false)
-    private User mentee;
-
-    @Column(nullable = false)
-    private String topic; // 멘토링 주제
-
-    @Builder.Default
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private SessionStatus status = SessionStatus.PENDING;
-
-    private LocalDate startDate; // 시작일
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
-    private LocalDateTime updatedAt;
+    private LocalDateTime lastMessageAt;
 
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+        lastMessageAt = LocalDateTime.now();
     }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-
 }

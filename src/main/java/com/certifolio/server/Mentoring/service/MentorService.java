@@ -32,15 +32,13 @@ public class MentorService {
     /**
      * 멘토 검색/목록 조회
      */
-    public MentorDTO.MentorsResponse searchMentors(List<String> skills, String location) {
+    public MentorDTO.MentorsResponse searchMentors(List<String> skills) {
         List<Mentor> mentors;
 
         if (skills != null && !skills.isEmpty()) {
             mentors = mentorRepository.findBySkillsContaining(skills);
-        } else if (location != null && !location.isEmpty()) {
-            mentors = mentorRepository.findByLocation(location);
         } else {
-            mentors = mentorRepository.findByStatusOrderByRatingDesc(MentorStatus.APPROVED);
+            mentors = mentorRepository.findByStatus(MentorStatus.APPROVED);
         }
 
         List<MentorDTO.MentorListItem> mentorItems = mentors.stream()
@@ -91,12 +89,8 @@ public class MentorService {
                 .company(request.getCompany())
                 .experience(request.getExperience())
                 .bio(request.getBio())
-                .menteeCapacity(request.getMenteeCapacity() != null ? Integer.parseInt(request.getMenteeCapacity()) : 5)
                 .preferredFormat(request.getPreferredFormat())
                 .status(MentorStatus.PENDING)
-                .rating(0.0)
-                .reviewCount(0)
-                .verified(false)
                 .skills(new ArrayList<>())
                 .availabilities(new ArrayList<>())
                 .build();
@@ -160,10 +154,6 @@ public class MentorService {
         mentor.setExperience(request.getExperience());
         mentor.setBio(request.getBio());
         mentor.setPreferredFormat(request.getPreferredFormat());
-
-        if (request.getMenteeCapacity() != null) {
-            mentor.setMenteeCapacity(Integer.parseInt(request.getMenteeCapacity()));
-        }
 
         // 스킬 업데이트 (기존 삭제 후 재생성)
         mentor.getSkills().clear();
