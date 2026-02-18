@@ -1,7 +1,9 @@
 package com.certifolio.server.User.controller;
 
+import com.certifolio.server.User.domain.CareerPreference;
 import com.certifolio.server.User.domain.User;
 import com.certifolio.server.User.repository.UserRepository;
+import com.certifolio.server.User.service.UserService;
 import com.certifolio.server.Form.util.AuthenticationHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,9 +20,7 @@ import java.util.Map;
 public class UserController {
 
     private final UserRepository userRepository;
-    
-    // Removing AuthenticationHelper usage for now as it delegates to custom logic
-    // private final AuthenticationHelper authenticationHelper; 
+    private final UserService userService;
 
     @GetMapping
     public ResponseEntity<?> getUserProfile(@AuthenticationPrincipal Object principal) {
@@ -52,6 +52,27 @@ public class UserController {
         return ResponseEntity.ok(Map.of("success", true, "data", data));
     }
 
+    /**
+     * 온보딩: 이름, 출생연도, 희망 직무, 희망 기업 유형을 한 번에 저장
+     */
+    @PatchMapping("/onboarding")
+    public ResponseEntity<?> onboarding(@AuthenticationPrincipal Object principal,
+                                        @RequestBody Map<String, Object> body) {
+        User user = getUser(principal);
+        if (user == null) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "message", "User not found"));
+        }
+
+        String name = (String) body.get("name");
+        Integer birthYear = parseIntegerSafely(body.get("birthYear"));
+        String jobRole = (String) body.get("jobRole");
+        String companyType = (String) body.get("companyType");
+
+        userService.saveOnboarding(user, name, birthYear, jobRole, companyType);
+
+        return ResponseEntity.ok(Map.of("success", true, "message", "온보딩 정보가 저장되었습니다."));
+    }
+
     @PatchMapping("/basic-info")
     public ResponseEntity<?> updateBasicInfo(@AuthenticationPrincipal Object principal,
                                              @RequestBody Map<String, Object> body) {
@@ -59,22 +80,23 @@ public class UserController {
         if (user == null) {
             return ResponseEntity.status(401).body(Map.of("success", false, "message", "User not found"));
         }
-        
+
         String name = (String) body.get("name");
-        Integer birthYear = null;
-        
-        if (body.get("birthYear") != null) {
-            try {
-                birthYear = Integer.parseInt(body.get("birthYear").toString());
-            } catch (NumberFormatException e) {
-                // Ignore or throw bad request
-            }
-        }
+        Integer birthYear = parseIntegerSafely(body.get("birthYear"));
 
         user.updateBasicInfo(name, birthYear, true);
         userRepository.save(user);
 
         return ResponseEntity.ok(Map.of("success", true, "message", "Information updated successfully"));
+    }
+
+    private Integer parseIntegerSafely(Object value) {
+        if (value == null) return null;
+        try {
+            return Integer.parseInt(value.toString());
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
     
     private User getUser(Object principal) {
