@@ -1,14 +1,10 @@
 package com.certifolio.server.User.controller;
 
-import com.certifolio.server.User.domain.CareerPreference;
 import com.certifolio.server.User.domain.User;
-import com.certifolio.server.User.repository.UserRepository;
 import com.certifolio.server.User.service.UserService;
-import com.certifolio.server.Form.util.AuthenticationHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -19,7 +15,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final UserRepository userRepository;
     private final UserService userService;
 
     @GetMapping
@@ -34,7 +29,7 @@ public class UserController {
     }
 
     private ResponseEntity<?> getProfileInternal(Object principal) {
-        User user = getUser(principal);
+        User user = userService.getByPrincipal(principal);
         if (user == null) {
             return ResponseEntity.status(401).body(Map.of("success", false, "message", "User not found"));
         }
@@ -58,7 +53,7 @@ public class UserController {
     @PatchMapping("/onboarding")
     public ResponseEntity<?> onboarding(@AuthenticationPrincipal Object principal,
                                         @RequestBody Map<String, Object> body) {
-        User user = getUser(principal);
+        User user = userService.getByPrincipal(principal);
         if (user == null) {
             return ResponseEntity.status(401).body(Map.of("success", false, "message", "User not found"));
         }
@@ -76,7 +71,7 @@ public class UserController {
     @PatchMapping("/basic-info")
     public ResponseEntity<?> updateBasicInfo(@AuthenticationPrincipal Object principal,
                                              @RequestBody Map<String, Object> body) {
-        User user = getUser(principal);
+        User user = userService.getByPrincipal(principal);
         if (user == null) {
             return ResponseEntity.status(401).body(Map.of("success", false, "message", "User not found"));
         }
@@ -84,8 +79,7 @@ public class UserController {
         String name = (String) body.get("name");
         Integer birthYear = parseIntegerSafely(body.get("birthYear"));
 
-        user.updateBasicInfo(name, birthYear, true);
-        userRepository.save(user);
+        userService.updateBasicInfo(user, name, birthYear);
 
         return ResponseEntity.ok(Map.of("success", true, "message", "Information updated successfully"));
     }
@@ -96,25 +90,6 @@ public class UserController {
             return Integer.parseInt(value.toString());
         } catch (NumberFormatException e) {
             return null;
-        }
-    }
-    
-    private User getUser(Object principal) {
-        String subject = null;
-        if (principal instanceof UserDetails) {
-            subject = ((UserDetails) principal).getUsername();
-        } else if (principal instanceof String) {
-            subject = (String) principal;
-        }
-
-        if (subject == null)
-            return null;
-
-        if (subject.contains(":")) {
-            String[] parts = subject.split(":", 2);
-            return userRepository.findByProviderAndProviderId(parts[0], parts[1]).orElse(null);
-        } else {
-            return userRepository.findByEmail(subject).orElse(null);
         }
     }
 }

@@ -9,6 +9,7 @@ import com.certifolio.server.User.repository.UserRepository;
 import com.certifolio.server.Form.Education.repository.EducationRepository;
 import com.certifolio.server.Form.Career.repository.CareerRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +30,27 @@ public class UserService {
     private final EducationRepository educationRepository;
     private final CareerRepository careerRepository;
     private final CareerPreferenceRepository careerPreferenceRepository;
+
+    /**
+     * principal(JWT subject) -> User 조회
+     * subject 형식: "provider:providerId" 또는 email
+     */
+    public User getByPrincipal(Object principal) {
+        String subject = null;
+        if (principal instanceof UserDetails) {
+            subject = ((UserDetails) principal).getUsername();
+        } else if (principal instanceof String) {
+            subject = (String) principal;
+        }
+        if (subject == null) return null;
+
+        if (subject.contains(":")) {
+            String[] parts = subject.split(":", 2);
+            return userRepository.findByProviderAndProviderId(parts[0], parts[1]).orElse(null);
+        } else {
+            return userRepository.findByEmail(subject).orElse(null);
+        }
+    }
 
     /**
      * 사용자 ID로 조회
@@ -84,6 +106,15 @@ public class UserService {
                 .stream()
                 .map(CareerDTO::from)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 기본 정보 수정 (이름, 출생연도)
+     */
+    @Transactional
+    public void updateBasicInfo(User user, String name, Integer birthYear) {
+        user.updateBasicInfo(name, birthYear, true);
+        userRepository.save(user);
     }
 
     /**
