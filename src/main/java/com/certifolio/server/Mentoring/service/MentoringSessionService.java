@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -72,24 +71,7 @@ public class MentoringSessionService {
                                 .topic(request.getTopic())
                                 .status(SessionStatus.PENDING)
                                 .startDate(LocalDate.now())
-                                .totalSessions(request.getTotalSessions() != null ? request.getTotalSessions() : 1)
-                                .completedSessions(0)
-                                .goals(new ArrayList<>())
                                 .build();
-
-                sessionRepository.save(session);
-
-                // 목표 추가
-                if (request.getGoals() != null) {
-                        for (String goalText : request.getGoals()) {
-                                SessionGoal goal = SessionGoal.builder()
-                                                .session(session)
-                                                .goal(goalText)
-                                                .completed(false)
-                                                .build();
-                                session.addGoal(goal);
-                        }
-                }
 
                 sessionRepository.save(session);
 
@@ -116,11 +98,6 @@ public class MentoringSessionService {
                 try {
                         SessionStatus newStatus = SessionStatus.valueOf(request.getStatus().toUpperCase());
                         session.setStatus(newStatus);
-
-                        // 완료로 변경 시 완료된 세션 수 증가
-                        if (newStatus == SessionStatus.COMPLETED) {
-                                session.setCompletedSessions(session.getCompletedSessions() + 1);
-                        }
 
                         sessionRepository.save(session);
 

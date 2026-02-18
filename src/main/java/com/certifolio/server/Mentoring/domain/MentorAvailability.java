@@ -24,9 +24,9 @@ public class MentorAvailability {
     private Mentor mentor;
 
     @Column(nullable = false)
-    private String timeSlot; // 예: "weekday-morning", "weekend-afternoon"
+    private String timeSlot; // 예: "weekday-morning", "weekend-afternoon" -> 30분 단위로 선택 시간
 
-    private String date; // 특정 날짜 (선택적)
-    private String time; // 특정 시간 (선택적)
+    private String date; // 특정 날짜 (선택적) -> 필수
+    private String time; // 특정 시간 (선택적) -> 필수
     private String slotType; // video, offline, chat
 }
