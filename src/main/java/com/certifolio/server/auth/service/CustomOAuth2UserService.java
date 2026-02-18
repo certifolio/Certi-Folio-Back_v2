@@ -67,13 +67,13 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         User user;
         if (userOptional.isPresent()) {
             user = userOptional.get();
-            user.update(oAuth2UserInfo.getName(), null); // Update profile, email usually doesn't change or we don't
+            user.update(oAuth2UserInfo.getName(), oAuth2UserInfo.getPicture());
                                                          // update it blindly
         } else {
             user = User.builder()
                     .name(oAuth2UserInfo.getName())
                     .email(oAuth2UserInfo.getEmail())
-                    .picture(null) // You can map picture if available in UserInfo
+                    .picture(oAuth2UserInfo.getPicture())
                     .role(Role.USER)
                     .provider(oAuth2UserInfo.getProvider())
                     .providerId(oAuth2UserInfo.getProviderId())

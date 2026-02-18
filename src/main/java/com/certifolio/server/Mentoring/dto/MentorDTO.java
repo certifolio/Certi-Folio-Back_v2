@@ -4,8 +4,8 @@ import com.certifolio.server.Mentoring.domain.Mentor;
 import com.certifolio.server.Mentoring.domain.MentorAvailability;
 import com.certifolio.server.Mentoring.domain.MentorReview;
 import com.certifolio.server.Mentoring.domain.MentorSkill;
-import com.certifolio.server.Career.dto.CareerDTO;
-import com.certifolio.server.User.dto.EducationDTO;
+import com.certifolio.server.Form.Career.dto.CareerDTO;
+import com.certifolio.server.Form.Education.dto.EducationDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -179,7 +179,7 @@ public class MentorDTO {
         public static ReviewItem from(MentorReview review) {
             return ReviewItem.builder()
                     .id(review.getId())
-                    .reviewer(review.getReviewer().getNickname())
+                    .reviewer(review.getReviewer().getName())
                     .rating(review.getRating())
                     .date(review.getCreatedAt().toLocalDate().toString())
                     .content(review.getContent())

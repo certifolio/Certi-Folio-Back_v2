@@ -18,6 +18,7 @@ spring:
       ddl-auto: update
     properties:
       hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
         format_sql: true
     show-sql: true
   security:
@@ -72,5 +73,6 @@ jwt:
 
 app:
   oauth2:
+    redirect-uri: http://localhost:3000/auth/callback
     authorized-redirect-uris:
       - http://localhost:3000/auth/callback

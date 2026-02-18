@@ -7,6 +7,8 @@ import com.certifolio.server.Mentoring.repository.MentorRepository;
 import com.certifolio.server.Mentoring.repository.MentoringApplicationRepository;
 import com.certifolio.server.Mentoring.repository.MentoringSessionRepository;
 import com.certifolio.server.User.repository.UserRepository;
+import com.certifolio.server.Notification.service.NotificationService;
+import com.certifolio.server.Notification.domain.NotificationType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,6 +29,7 @@ public class MentoringApplicationService {
         private final MentorRepository mentorRepository;
         private final MentoringSessionRepository sessionRepository;
         private final UserRepository userRepository;
+        private final NotificationService notificationService;
 
         /**
          * 멘토링 신청
@@ -69,7 +72,16 @@ public class MentoringApplicationService {
 
                 applicationRepository.save(application);
 
-                log.info("멘토링 신청 생성: menteeId={}, mentorId={}, applicationId={}",
+                // 멘토에게 알림 전송
+                notificationService.createNotification(
+                        mentor.getUser(),
+                        NotificationType.MENTORING,
+                        "새로운 멘토링 신청",
+                        mentee.getName() + "님이 멘토링을 신청했습니다.",
+                        "/mentoring/received" // 받은 신청 목록으로 이동
+                );
+
+                log.info("멘토링 신청 생성 및 알림 발송: menteeId={}, mentorId={}, applicationId={}",
                                 userId, mentor.getId(), application.getId());
 
                 return MentoringApplicationDTO.CreateResponse.builder()
@@ -165,7 +177,18 @@ public class MentoringApplicationService {
 
                 sessionRepository.save(session);
 
-                log.info("멘토링 신청 승인: applicationId={}, sessionId={}", applicationId, session.getId());
+                sessionRepository.save(session);
+
+                // 멘티에게 승인 알림 전송
+                notificationService.createNotification(
+                        application.getMentee(),
+                        NotificationType.MENTORING,
+                        "멘토링 신청 승인",
+                        mentor.getUser().getName() + " 멘토님이 멘토링 신청을 승인했습니다.",
+                        "/mentoring/session/" + session.getId() // 생성된 세션으로 이동
+                );
+
+                log.info("멘토링 신청 승인 및 알림 발송: applicationId={}, sessionId={}", applicationId, session.getId());
 
                 return MentoringApplicationDTO.ActionResponse.builder()
                                 .success(true)
@@ -207,7 +230,18 @@ public class MentoringApplicationService {
                 application.setRejectReason(reason);
                 applicationRepository.save(application);
 
-                log.info("멘토링 신청 거절: applicationId={}", applicationId);
+                applicationRepository.save(application);
+
+                // 멘티에게 거절 알림 전송
+                notificationService.createNotification(
+                        application.getMentee(),
+                        NotificationType.MENTORING,
+                        "멘토링 신청 거절",
+                        mentor.getUser().getName() + " 멘토님이 멘토링 신청을 거절했습니다.",
+                        "/mentoring/sent" // 보낸 신청 목록으로 이동
+                );
+
+                log.info("멘토링 신청 거절 및 알림 발송: applicationId={}", applicationId);
 
                 return MentoringApplicationDTO.ActionResponse.builder()
                                 .success(true)

@@ -60,6 +60,6 @@ public class MentoringApplication {
 
     // Helper methods
     public String getMenteeName() {
-        return mentee != null ? mentee.getNickname() : "Unknown";
+        return mentee != null ? mentee.getName() : "Unknown";
     }
 }

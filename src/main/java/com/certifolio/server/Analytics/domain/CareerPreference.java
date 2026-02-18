@@ -21,10 +21,12 @@ public class CareerPreference {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @Column(nullable = false)
     private String jobRole;
-    private String companyType;
-    private String targetCompany;
 
+    @Column(nullable = false)
+    private String companyType;
+    
     private LocalDateTime updatedAt;
 
     @PrePersist
