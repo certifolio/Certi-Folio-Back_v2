@@ -41,9 +41,20 @@ public class ChatController {
             return ResponseEntity.status(401).body("인증이 필요합니다.");
         }
 
-        ChatMessageDTO.ChatRoomResponse room = chatService.getOrCreateChatRoom(
-                request.getMentorId(), user.getId());
-        return ResponseEntity.ok(room);
+        try {
+            // 멘토가 채팅방을 만들 때: request에 userId가 있으면 해당 멘티의 ID 사용
+            Long targetUserId = user.getId();
+            if (request.getUserId() != null) {
+                targetUserId = request.getUserId();
+            }
+
+            ChatMessageDTO.ChatRoomResponse room = chatService.getOrCreateChatRoom(
+                    request.getMentorId(), targetUserId);
+            return ResponseEntity.ok(room);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(403).body(
+                    java.util.Map.of("success", false, "message", e.getMessage()));
+        }
     }
 
     /**
