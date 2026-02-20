@@ -7,6 +7,7 @@ import com.certifolio.server.Mentoring.dto.ChatMessageDTO;
 import com.certifolio.server.Mentoring.repository.ChatMessageRepository;
 import com.certifolio.server.Mentoring.repository.ChatRoomRepository;
 import com.certifolio.server.Mentoring.repository.MentorRepository;
+import com.certifolio.server.Mentoring.repository.MentoringApplicationRepository;
 import com.certifolio.server.User.domain.User;
 import com.certifolio.server.User.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,19 +28,30 @@ public class ChatService {
         private final ChatMessageRepository chatMessageRepository;
         private final ChatRoomRepository chatRoomRepository;
         private final MentorRepository mentorRepository;
+        private final MentoringApplicationRepository mentoringApplicationRepository;
         private final UserRepository userRepository;
 
         /**
          * 채팅방 생성 또는 기존 채팅방 반환
+         * 승인된 멘토링 관계가 있는 경우에만 채팅방 생성 가능
          */
         @Transactional
         public ChatMessageDTO.ChatRoomResponse getOrCreateChatRoom(Long mentorId, Long userId) {
-                // 기존 채팅방 검색
+                // 기존 채팅방이 있으면 바로 반환
                 return chatRoomRepository.findByMentorIdAndUserId(mentorId, userId)
                                 .map(this::toChatRoomResponse)
                                 .orElseGet(() -> {
                                         Mentor mentor = mentorRepository.findById(mentorId)
                                                         .orElseThrow(() -> new RuntimeException("멘토를 찾을 수 없습니다."));
+
+                                        // 멘토 본인이거나, 승인된 멘토링 신청이 있는지 확인
+                                        boolean isMentorSelf = mentor.getUser().getId().equals(userId);
+                                        boolean hasApprovedApplication = mentoringApplicationRepository
+                                                        .existsApprovedApplication(userId, mentorId);
+
+                                        if (!isMentorSelf && !hasApprovedApplication) {
+                                                throw new IllegalStateException("승인된 멘토링 관계가 있어야 채팅이 가능합니다.");
+                                        }
 
                                         User user = userRepository.findById(userId)
                                                         .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));

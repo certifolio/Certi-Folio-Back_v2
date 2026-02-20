@@ -61,6 +61,7 @@ public class MentoringApplicationDTO {
         private Long id;
         private String menteeName;
         private String menteeImage;
+        private Long menteeUserId;
         private String mentorName;
         private Long mentorId;
         private String topic;
@@ -73,6 +74,7 @@ public class MentoringApplicationDTO {
                     .id(app.getId())
                     .menteeName(app.getMenteeName())
                     .menteeImage(app.getMentee().getPicture())
+                    .menteeUserId(app.getMentee().getId())
                     .mentorName(app.getMentor().getName())
                     .mentorId(app.getMentor().getId())
                     .topic(app.getTopic())

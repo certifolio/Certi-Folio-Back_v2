@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,7 +22,7 @@ public class EducationController {
 
     @PostMapping
     public ResponseEntity<?> saveEducation(@AuthenticationPrincipal Object principal,
-                                            @RequestBody EducationDTO dto) {
+            @RequestBody EducationDTO dto) {
         Long userId = authenticationHelper.getUserId(principal);
         EducationDTO saved = educationService.saveEducation(userId, dto);
         return ResponseEntity.ok(Map.of("success", true, "education", saved));
@@ -30,6 +31,10 @@ public class EducationController {
     @GetMapping
     public ResponseEntity<?> getEducation(@AuthenticationPrincipal Object principal) {
         Long userId = authenticationHelper.getUserId(principal);
-        return ResponseEntity.ok(Map.of("success", true, "data", educationService.getEducation(userId)));
+        Object data = educationService.getEducation(userId);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", data);
+        return ResponseEntity.ok(response);
     }
 }

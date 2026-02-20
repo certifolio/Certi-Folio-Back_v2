@@ -30,6 +30,7 @@ public class ChatMessageDTO {
     @Builder
     public static class CreateRoomRequest {
         private Long mentorId;
+        private Long userId; // 멘토가 채팅방을 만들 때 멘티의 userId 지정
     }
 
     /**

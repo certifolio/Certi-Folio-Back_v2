@@ -1,0 +1,6 @@
+2026-02-20 23:48:48.428261+09:00 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "CHAT_MESSAGE" not found; SQL statement:
+DELETE FROM chat_message WHERE chat_room_id = 2 [42102-240]
+2026-02-20 23:48:54.241868+09:00 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "CHAT_MESSAGE" not found; SQL statement:
+DELETE FROM chat_message WHERE chat_room_id = 2 [42102-240]

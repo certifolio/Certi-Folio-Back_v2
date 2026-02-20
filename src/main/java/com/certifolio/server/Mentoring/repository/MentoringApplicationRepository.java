@@ -32,4 +32,10 @@ public interface MentoringApplicationRepository extends JpaRepository<MentoringA
                         @Param("menteeId") Long menteeId,
                         @Param("mentorId") Long mentorId,
                         @Param("status") ApplicationStatus status);
+
+        // 승인된 멘토링 관계 확인 (멘티로서 승인됨)
+        @Query("SELECT COUNT(a) > 0 FROM MentoringApplication a WHERE a.mentee.id = :userId AND a.mentor.id = :mentorId AND a.status = 'APPROVED'")
+        boolean existsApprovedApplication(
+                        @Param("userId") Long userId,
+                        @Param("mentorId") Long mentorId);
 }
