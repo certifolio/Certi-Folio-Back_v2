@@ -55,7 +55,7 @@ public class MessageRetryScheduler {
 
             try {
                 // 재전송 카운트 증가
-                message.setRetryCount(message.getRetryCount() + 1);
+                message.incrementRetryCount();
 
                 // 해당 채팅방으로 메시지 재전송
                 ChatMessageDTO.MessageResponse response = ChatMessageDTO.MessageResponse.builder()

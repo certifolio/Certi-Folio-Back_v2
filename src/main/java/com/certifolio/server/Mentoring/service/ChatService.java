@@ -44,12 +44,16 @@ public class ChatService {
                                         Mentor mentor = mentorRepository.findById(mentorId)
                                                         .orElseThrow(() -> new RuntimeException("멘토를 찾을 수 없습니다."));
 
-                                        // 멘토 본인이거나, 승인된 멘토링 신청이 있는지 확인
-                                        boolean isMentorSelf = mentor.getUser().getId().equals(userId);
+                                        // 멘토 본인과는 채팅방 생성 불가
+                                        if (mentor.getUser().getId().equals(userId)) {
+                                                throw new IllegalStateException("멘토 본인과는 채팅방을 생성할 수 없습니다.");
+                                        }
+
+                                        // 승인된 멘토링 신청이 있는지 확인
                                         boolean hasApprovedApplication = mentoringApplicationRepository
                                                         .existsApprovedApplication(userId, mentorId);
 
-                                        if (!isMentorSelf && !hasApprovedApplication) {
+                                        if (!hasApprovedApplication) {
                                                 throw new IllegalStateException("승인된 멘토링 관계가 있어야 채팅이 가능합니다.");
                                         }
 
@@ -97,6 +101,11 @@ public class ChatService {
                 ChatRoom room = chatRoomRepository.findById(chatRoomId)
                                 .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다."));
 
+                // 채팅방 참여자인지 검증
+                if (!isRoomParticipant(room, senderId)) {
+                        throw new IllegalStateException("해당 채팅방에 참여 권한이 없습니다.");
+                }
+
                 User sender = userRepository.findById(senderId)
                                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
@@ -117,7 +126,7 @@ public class ChatService {
                 ChatMessage saved = chatMessageRepository.save(message);
 
                 // 채팅방 마지막 메시지 시간 업데이트
-                room.setLastMessageAt(LocalDateTime.now());
+                room.updateLastMessageAt();
                 chatRoomRepository.save(room);
 
                 log.info("Chat message saved: chatRoomId={}, senderId={}, messageId={}, seq={}",
@@ -167,9 +176,7 @@ public class ChatService {
                                 .orElseThrow(() -> new RuntimeException("메시지를 찾을 수 없습니다."));
 
                 if (!message.isDelivered()) {
-                        message.setDelivered(true);
-                        message.setDeliveredAt(LocalDateTime.now());
-                        message.setDeliveryStatus(ChatMessage.DeliveryStatus.DELIVERED);
+                        message.markDelivered();
                         chatMessageRepository.save(message);
                         log.info("Message ACK received: messageId={}, chatRoomId={}",
                                         messageId, message.getChatRoom().getId());
@@ -191,6 +198,14 @@ public class ChatService {
         @Transactional(readOnly = true)
         public ChatMessageDTO.ChatHistoryResponse getMissedMessages(Long chatRoomId, Long lastSequenceNumber,
                         Long currentUserId) {
+                ChatRoom room = chatRoomRepository.findById(chatRoomId)
+                                .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다."));
+
+                // 채팅방 참여자인지 검증
+                if (currentUserId != null && !isRoomParticipant(room, currentUserId)) {
+                        throw new IllegalStateException("해당 채팅방에 참여 권한이 없습니다.");
+                }
+
                 List<ChatMessage> missedMessages = chatMessageRepository
                                 .findByChatRoomIdAndSequenceNumberGreaterThanOrderBySequenceNumberAsc(
                                                 chatRoomId, lastSequenceNumber);
@@ -223,8 +238,12 @@ public class ChatService {
          */
         @Transactional(readOnly = true)
         public ChatMessageDTO.ChatHistoryResponse getChatHistory(Long chatRoomId, Long currentUserId) {
-                if (!chatRoomRepository.existsById(chatRoomId)) {
-                        throw new RuntimeException("채팅방을 찾을 수 없습니다.");
+                ChatRoom room = chatRoomRepository.findById(chatRoomId)
+                                .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다."));
+
+                // 채팅방 참여자인지 검증
+                if (currentUserId != null && !isRoomParticipant(room, currentUserId)) {
+                        throw new IllegalStateException("해당 채팅방에 참여 권한이 없습니다.");
                 }
 
                 List<ChatMessage> messages = chatMessageRepository.findByChatRoomIdOrderBySequenceNumberAsc(chatRoomId);
@@ -246,6 +265,14 @@ public class ChatService {
          */
         @Transactional(readOnly = true)
         public ChatMessageDTO.ChatHistoryResponse getRecentMessages(Long chatRoomId, Long currentUserId) {
+                ChatRoom room = chatRoomRepository.findById(chatRoomId)
+                                .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다."));
+
+                // 채팅방 참여자인지 검증
+                if (currentUserId != null && !isRoomParticipant(room, currentUserId)) {
+                        throw new IllegalStateException("해당 채팅방에 참여 권한이 없습니다.");
+                }
+
                 List<ChatMessage> messages = chatMessageRepository.findTop50ByChatRoomIdOrderBySentAtDesc(chatRoomId);
 
                 // 최신순으로 가져온 것을 시간순으로 뒤집기
@@ -284,6 +311,14 @@ public class ChatService {
         }
 
         /**
+         * 채팅방 참여자(멘토 또는 멘티)인지 확인
+         */
+        private boolean isRoomParticipant(ChatRoom room, Long userId) {
+                return room.getUser().getId().equals(userId)
+                                || room.getMentor().getUser().getId().equals(userId);
+        }
+
+        /**
          * ChatRoom → ChatRoomResponse 변환
          */
         private ChatMessageDTO.ChatRoomResponse toChatRoomResponse(ChatRoom room) {
@@ -294,6 +329,7 @@ public class ChatService {
                 return ChatMessageDTO.ChatRoomResponse.builder()
                                 .chatRoomId(room.getId())
                                 .mentorId(mentor.getId())
+                                .mentorUserId(mentorUser.getId())
                                 .mentorName(mentorUser.getName())
                                 .mentorProfileImage(mentorUser.getPicture())
                                 .mentorCompany(mentor.getCompany())
