@@ -3,6 +3,8 @@ package com.certifolio.server.Mentoring.controller;
 import com.certifolio.server.Mentoring.dto.ChatMessageDTO;
 import com.certifolio.server.Mentoring.service.ChatService;
 import com.certifolio.server.User.domain.User;
+import com.certifolio.server.Mentoring.domain.Mentor;
+import com.certifolio.server.Mentoring.repository.MentorRepository;
 import com.certifolio.server.User.repository.UserRepository;
 import com.certifolio.server.auth.util.AuthUtils;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,7 @@ public class ChatController {
 
     private final ChatService chatService;
     private final UserRepository userRepository;
+    private final MentorRepository mentorRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
     // ===== REST API (채팅방 관리) =====
@@ -42,9 +45,15 @@ public class ChatController {
         }
 
         try {
-            // 멘토가 채팅방을 만들 때: request에 userId가 있으면 해당 멘티의 ID 사용
             Long targetUserId = user.getId();
             if (request.getUserId() != null) {
+                // 멘토가 멘티를 지정하는 경우: 요청자가 해당 멘토의 소유자인지 검증
+                Mentor mentor = mentorRepository.findById(request.getMentorId())
+                        .orElseThrow(() -> new RuntimeException("멘토를 찾을 수 없습니다."));
+                if (!mentor.getUser().getId().equals(user.getId())) {
+                    return ResponseEntity.status(403).body(
+                            java.util.Map.of("success", false, "message", "다른 멘토의 채팅방을 생성할 권한이 없습니다."));
+                }
                 targetUserId = request.getUserId();
             }
 

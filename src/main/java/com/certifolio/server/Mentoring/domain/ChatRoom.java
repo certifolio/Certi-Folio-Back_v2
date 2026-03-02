@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
         @UniqueConstraint(columnNames = { "mentor_id", "user_id" })
 })
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -41,5 +40,10 @@ public class ChatRoom {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         lastMessageAt = LocalDateTime.now();
+    }
+
+    /** 마지막 메시지 시간 업데이트 */
+    public void updateLastMessageAt() {
+        this.lastMessageAt = LocalDateTime.now();
     }
 }

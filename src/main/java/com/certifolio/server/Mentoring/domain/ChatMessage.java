@@ -20,7 +20,6 @@ import java.time.LocalDateTime;
         @Index(name = "idx_chatmsg_delivered", columnList = "delivered, sentAt")
 })
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -77,6 +76,18 @@ public class ChatMessage {
         if (sentAt == null) {
             sentAt = LocalDateTime.now();
         }
+    }
+
+    /** ACK 수신 처리 (DELIVERED 상태로 전환) */
+    public void markDelivered() {
+        this.delivered = true;
+        this.deliveredAt = LocalDateTime.now();
+        this.deliveryStatus = DeliveryStatus.DELIVERED;
+    }
+
+    /** 재전송 시도 횟수 증가 */
+    public void incrementRetryCount() {
+        this.retryCount++;
     }
 
     public enum MessageType {
