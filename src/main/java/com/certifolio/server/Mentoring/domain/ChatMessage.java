@@ -7,12 +7,11 @@ import java.time.LocalDateTime;
 
 /**
  * 채팅 메시지 엔티티
- * 멘토링 세션 내 멘토-멘티 간 채팅 메시지
+ * 멘토-멘티 간 채팅 메시지
  */
 @Entity
 @Table(name = "chat_messages")
 @Getter
-@Setter // 제거하면 좋음
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -49,7 +48,7 @@ public class ChatMessage {
     }
 
     public enum MessageType {
-        TEXT, // 일반 텍스트 메시지
-        SYSTEM // 시스템 메시지 (입장, 퇴장 등)
+        TEXT,
+        SYSTEM
     }
 }

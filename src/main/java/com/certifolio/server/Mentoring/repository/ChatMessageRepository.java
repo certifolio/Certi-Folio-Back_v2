@@ -4,7 +4,6 @@ import com.certifolio.server.Mentoring.domain.ChatMessage;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -23,5 +22,5 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
     /**
      * 특정 시간 이후 메시지 개수 (읽지 않은 메시지 수 계산용)
      */
-    int countByChatRoomIdAndSentAtAfter(Long chatRoomId, LocalDateTime since);
+    int countByChatRoomIdAndSentAtAfter(Long chatRoomId, java.time.LocalDateTime since);
 }

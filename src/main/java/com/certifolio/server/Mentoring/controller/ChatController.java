@@ -3,6 +3,8 @@ package com.certifolio.server.Mentoring.controller;
 import com.certifolio.server.Mentoring.dto.ChatMessageDTO;
 import com.certifolio.server.Mentoring.service.ChatService;
 import com.certifolio.server.User.domain.User;
+import com.certifolio.server.Mentoring.domain.Mentor;
+import com.certifolio.server.Mentoring.repository.MentorRepository;
 import com.certifolio.server.User.repository.UserRepository;
 import com.certifolio.server.auth.util.AuthUtils;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,7 @@ public class ChatController {
 
     private final ChatService chatService;
     private final UserRepository userRepository;
+    private final MentorRepository mentorRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
     // ===== REST API (채팅방 관리) =====
@@ -41,9 +44,26 @@ public class ChatController {
             return ResponseEntity.status(401).body("인증이 필요합니다.");
         }
 
-        ChatMessageDTO.ChatRoomResponse room = chatService.getOrCreateChatRoom(
-                request.getMentorId(), user.getId());
-        return ResponseEntity.ok(room);
+        try {
+            Long targetUserId = user.getId();
+            if (request.getUserId() != null) {
+                // 멘토가 멘티를 지정하는 경우: 요청자가 해당 멘토의 소유자인지 검증
+                Mentor mentor = mentorRepository.findById(request.getMentorId())
+                        .orElseThrow(() -> new RuntimeException("멘토를 찾을 수 없습니다."));
+                if (!mentor.getUser().getId().equals(user.getId())) {
+                    return ResponseEntity.status(403).body(
+                            java.util.Map.of("success", false, "message", "다른 멘토의 채팅방을 생성할 권한이 없습니다."));
+                }
+                targetUserId = request.getUserId();
+            }
+
+            ChatMessageDTO.ChatRoomResponse room = chatService.getOrCreateChatRoom(
+                    request.getMentorId(), targetUserId);
+            return ResponseEntity.ok(room);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(403).body(
+                    java.util.Map.of("success", false, "message", e.getMessage()));
+        }
     }
 
     /**
@@ -109,7 +129,7 @@ public class ChatController {
         messagingTemplate.convertAndSend("/topic/chat." + chatRoomId, systemMsg);
     }
 
-    // ===== REST API (채팅 기록 조회용) =====
+    // ===== REST API (채팅 기록) =====
 
     /**
      * REST로 메시지 전송 (WebSocket 없이도 사용 가능)
@@ -136,7 +156,7 @@ public class ChatController {
     }
 
     /**
-     * 채팅 기록 전체 조회
+     * 채팅 기록 전체 조회 (시간순 정렬)
      * GET /api/chat/rooms/{chatRoomId}/messages
      */
     @GetMapping("/api/chat/rooms/{chatRoomId}/messages")

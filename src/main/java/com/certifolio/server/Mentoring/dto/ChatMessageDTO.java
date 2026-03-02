@@ -30,13 +30,13 @@ public class ChatMessageDTO {
     @Builder
     public static class CreateRoomRequest {
         private Long mentorId;
+        private Long userId; // 멘토가 채팅방을 만들 때 멘티의 userId 지정
     }
 
     /**
      * 개별 메시지 응답 DTO
      */
     @Getter
-    @Setter
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
@@ -56,7 +56,6 @@ public class ChatMessageDTO {
      * 채팅 기록 응답 DTO
      */
     @Getter
-    @Setter
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
@@ -71,13 +70,13 @@ public class ChatMessageDTO {
      * 채팅방 정보 응답 DTO
      */
     @Getter
-    @Setter
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
     public static class ChatRoomResponse {
         private Long chatRoomId;
         private Long mentorId;
+        private Long mentorUserId; // 멘토의 User 테이블 PK (프론트엔드 역할 비교용)
         private String mentorName;
         private String mentorProfileImage;
         private String mentorCompany;
@@ -92,7 +91,6 @@ public class ChatMessageDTO {
      * 내 채팅방 목록 응답 DTO
      */
     @Getter
-    @Setter
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
