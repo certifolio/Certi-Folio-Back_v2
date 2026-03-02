@@ -154,7 +154,7 @@ WebSocket을 이용한 실시간 채팅 기능을 제공합니다.
 
 ## 🗂️ 관련 레포지토리
 
-- **프론트엔드**: (추후 링크 추가)
+- **프론트엔드**: https://github.com/Jong0128/Certi-Folio-Front_v3.git
 
 ---
 
@@ -162,7 +162,8 @@ WebSocket을 이용한 실시간 채팅 기능을 제공합니다.
 
 | 이름 | 역할 |
 |---|---|
-| (팀원 이름 추가) | Backend Developer |
+| 임종훈 | Backend Developer |
+| 남윤성 | Backend Developer |
 
 ---
 
