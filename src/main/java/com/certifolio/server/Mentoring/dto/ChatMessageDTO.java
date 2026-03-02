@@ -50,8 +50,6 @@ public class ChatMessageDTO {
         private String type; // TEXT, SYSTEM
         private LocalDateTime sentAt;
         private boolean isMine; // 본인 메시지 여부 (REST 조회 시 사용)
-        private Long sequenceNumber; // 시퀀스 번호 (클라이언트 정렬용)
-        private String deliveryStatus; // SENT, DELIVERED, READ
     }
 
     /**
@@ -100,46 +98,5 @@ public class ChatMessageDTO {
         private boolean success;
         private List<ChatRoomResponse> rooms;
         private int totalCount;
-    }
-
-    // ===== ACK / 동기화 관련 DTO =====
-
-    /**
-     * 클라이언트 → 서버: 메시지 수신 확인 (ACK) 요청
-     */
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder
-    public static class AckRequest {
-        private Long chatRoomId;
-        private Long messageId;
-        private String senderSubject; // ACK 전송자 식별용
-    }
-
-    /**
-     * 서버 → 클라이언트: ACK 처리 결과 응답
-     */
-    @Getter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder
-    public static class AckResponse {
-        private Long messageId;
-        private String status; // "ACK_OK"
-        private LocalDateTime acknowledgedAt;
-    }
-
-    /**
-     * 재접속 시 누락 메시지 동기화 요청 DTO
-     */
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder
-    public static class SyncRequest {
-        private Long lastSequenceNumber; // 클라이언트가 마지막으로 수신한 시퀀스 번호
     }
 }

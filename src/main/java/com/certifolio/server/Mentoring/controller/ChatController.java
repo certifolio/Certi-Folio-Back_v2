@@ -89,8 +89,6 @@ public class ChatController {
      * 채팅 메시지 전송 (WebSocket STOMP)
      * 클라이언트 → /app/chat.send/{chatRoomId}
      * 서버 → /topic/chat.{chatRoomId} 로 브로드캐스트
-     *
-     * 응답에 sequenceNumber가 포함되어 클라이언트에서 순서 정렬 가능
      */
     @MessageMapping("/chat.send/{chatRoomId}")
     public void sendMessage(@DestinationVariable Long chatRoomId,
@@ -104,7 +102,7 @@ public class ChatController {
             return;
         }
 
-        // 메시지 저장 및 응답 생성 (시퀀스 번호 자동 부여됨)
+        // 메시지 저장 및 응답 생성
         ChatMessageDTO.MessageResponse response = chatService.sendMessage(
                 chatRoomId, sender.getId(), request.getContent());
 
@@ -131,33 +129,7 @@ public class ChatController {
         messagingTemplate.convertAndSend("/topic/chat." + chatRoomId, systemMsg);
     }
 
-    /**
-     * 메시지 수신 확인 (ACK) 처리 (WebSocket STOMP)
-     * 클라이언트 → /app/chat.ack/{chatRoomId}
-     * 서버 → /queue/ack 으로 ACK 결과 응답 (개인 메시지)
-     *
-     * 클라이언트는 메시지를 수신하면 이 핸들러로 ACK를 보내야 합니다.
-     * ACK가 오지 않으면 서버가 주기적으로 재전송합니다.
-     */
-    @MessageMapping("/chat.ack/{chatRoomId}")
-    public void acknowledgeMessage(@DestinationVariable Long chatRoomId,
-            @Payload ChatMessageDTO.AckRequest request) {
-        log.info("ACK received: chatRoomId={}, messageId={}", chatRoomId, request.getMessageId());
-
-        try {
-            ChatMessageDTO.AckResponse ackResponse = chatService.acknowledgeMessage(request.getMessageId());
-
-            // ACK 전송자에게 확인 응답 (개인 큐)
-            if (request.getSenderSubject() != null) {
-                messagingTemplate.convertAndSend(
-                        "/queue/ack." + request.getSenderSubject(), ackResponse);
-            }
-        } catch (Exception e) {
-            log.error("ACK processing failed: messageId={}, error={}", request.getMessageId(), e.getMessage());
-        }
-    }
-
-    // ===== REST API (채팅 기록 / 동기화) =====
+    // ===== REST API (채팅 기록) =====
 
     /**
      * REST로 메시지 전송 (WebSocket 없이도 사용 가능)
@@ -184,7 +156,7 @@ public class ChatController {
     }
 
     /**
-     * 채팅 기록 전체 조회 (시퀀스 번호 순서대로 정렬)
+     * 채팅 기록 전체 조회 (시간순 정렬)
      * GET /api/chat/rooms/{chatRoomId}/messages
      */
     @GetMapping("/api/chat/rooms/{chatRoomId}/messages")
@@ -213,28 +185,6 @@ public class ChatController {
 
         ChatMessageDTO.ChatHistoryResponse history = chatService.getRecentMessages(chatRoomId, userId);
         return ResponseEntity.ok(history);
-    }
-
-    /**
-     * 재접속 시 누락 메시지 동기화 API
-     * GET /api/chat/rooms/{chatRoomId}/sync?lastSeq=N
-     *
-     * 클라이언트가 마지막으로 수신한 시퀀스 번호를 전달하면,
-     * 그 이후의 누락된 메시지를 시퀀스 순서대로 반환합니다.
-     * 네트워크 단절 후 재접속 시 이전 대화를 완벽히 복구할 수 있습니다.
-     */
-    @GetMapping("/api/chat/rooms/{chatRoomId}/sync")
-    public ResponseEntity<?> syncMessages(
-            @PathVariable Long chatRoomId,
-            @RequestParam(name = "lastSeq", defaultValue = "0") Long lastSequenceNumber,
-            @AuthenticationPrincipal Object principal) {
-
-        User user = AuthUtils.resolveUser(principal, userRepository);
-        Long userId = (user != null) ? user.getId() : null;
-
-        ChatMessageDTO.ChatHistoryResponse missed = chatService.getMissedMessages(
-                chatRoomId, lastSequenceNumber, userId);
-        return ResponseEntity.ok(missed);
     }
 
     // ===== Helper =====
