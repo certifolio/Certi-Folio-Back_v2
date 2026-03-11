@@ -33,12 +33,10 @@ public class SecurityConfig {
                 http
                                 .csrf(csrf -> csrf.disable())
                                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                                .headers(headers -> headers.frameOptions(frame -> frame.disable())) // Enable H2 console
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .authorizeHttpRequests(auth -> auth
-                                                .requestMatchers("/", "/css/**", "/images/**", "/js/**",
-                                                                "/h2-console/**", "/profile")
+                                                .requestMatchers("/", "/css/**", "/images/**", "/js/**", "/profile")
                                                 .permitAll()
                                                 .requestMatchers("/oauth2/**", "/login/oauth2/**", "/login").permitAll()
                                                 .requestMatchers("/ws/**").permitAll()
