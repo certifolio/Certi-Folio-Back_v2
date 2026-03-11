@@ -1,0 +1,45 @@
+name: Spring Boot Deploy to EC2
+
+on:
+  push:
+    branches: [ "main" ] # main 브랜치에 푸시될 때만 실행
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 1. 백엔드 코드 가져오기
+        uses: actions/checkout@v4
+
+      - name: 2. Java 21 세팅
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'corretto'
+
+      - name: 3. Spring Boot 빌드 (.jar 파일 만들기)
+        run: |
+          chmod +x ./gradlew
+          ./gradlew clean build -x test
+
+      - name: 4. 완성된 파일을 EC2의 백엔드 폴더로 전달
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_KEY }}
+          source: "build/libs/*.jar"
+          target: "~/backend"
+          strip_components: 2
+
+      - name: 5. EC2 접속 후 기존 서버 끄고 새 서버 실행
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            cd ~/backend
+            sudo fuser -k -n tcp 8080 || true
+            sleep 3
+            nohup java -jar *.jar > server.log 2>&1 &
