@@ -26,7 +26,7 @@ spring:
             client-secret: ${GOOGLE_CLIENT_SECRET}
             client-authentication-method: client_secret_post
             authorization-grant-type: authorization_code
-            redirect-uri: "http://3.35.37.53/login/oauth2/code/google"
+            redirect-uri: "http://ec2-3-35-37-53.ap-northeast-2.compute.amazonaws.com/login/oauth2/code/google"
             scope:
               - email
               - profile
