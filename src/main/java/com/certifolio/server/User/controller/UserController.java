@@ -78,8 +78,10 @@ public class UserController {
 
         String name = (String) body.get("name");
         Integer birthYear = parseIntegerSafely(body.get("birthYear"));
+        Boolean isInfoInputted = body.get("isInfoInputted") instanceof Boolean
+                ? (Boolean) body.get("isInfoInputted") : null;
 
-        userService.updateBasicInfo(user, name, birthYear);
+        userService.updateBasicInfo(user, name, birthYear, isInfoInputted);
 
         return ResponseEntity.ok(Map.of("success", true, "message", "Information updated successfully"));
     }

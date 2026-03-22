@@ -28,6 +28,7 @@ public class CodingTest {
     private Integer solvedCount;
     private Integer rating;
     private Integer maxStreak;
+    @Column(name = "boj_rank")
     private Integer rank;
     private String bio;
     

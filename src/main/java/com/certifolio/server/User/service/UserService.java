@@ -109,11 +109,11 @@ public class UserService {
     }
 
     /**
-     * 기본 정보 수정 (이름, 출생연도)
+     * 기본 정보 수정 (이름, 출생연도, 정보입력완료여부)
      */
     @Transactional
-    public void updateBasicInfo(User user, String name, Integer birthYear) {
-        user.updateBasicInfo(name, birthYear, true);
+    public void updateBasicInfo(User user, String name, Integer birthYear, Boolean isInfoInputted) {
+        user.updateBasicInfo(name, birthYear, isInfoInputted != null ? isInfoInputted : user.isInfoInputted());
         userRepository.save(user);
     }
 
