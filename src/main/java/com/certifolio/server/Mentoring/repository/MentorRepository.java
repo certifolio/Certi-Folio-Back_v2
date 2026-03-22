@@ -27,4 +27,6 @@ public interface MentorRepository extends JpaRepository<Mentor, Long> {
 
     @Query("SELECT m FROM Mentor m WHERE m.status = 'APPROVED' ORDER BY m.createdAt DESC")
     List<Mentor> findTopMentors();
+
+    List<Mentor> findAllByOrderByCreatedAtDesc();
 }

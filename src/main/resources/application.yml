@@ -72,3 +72,7 @@ app:
     redirect-uri: http://ec2-3-35-37-53.ap-northeast-2.compute.amazonaws.com/auth/callback
     authorized-redirect-uris:
       - http://ec2-3-35-37-53.ap-northeast-2.compute.amazonaws.com/auth/callback
+
+gemini:
+  api:
+    key: ${GEMINI_API_KEY}

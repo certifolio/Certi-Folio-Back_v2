@@ -115,6 +115,47 @@ public class MentorController {
     }
 
     /**
+     * [어드민] 전체 멘토 신청 목록 조회
+     * GET /api/mentors/admin/applications
+     */
+    @GetMapping("/admin/applications")
+    public ResponseEntity<MentorDTO.AdminMentorsResponse> getAdminApplications(
+            @AuthenticationPrincipal Object principal) {
+        if (getUser(principal) == null) return ResponseEntity.status(401).build();
+        return ResponseEntity.ok(mentorService.getAdminApplications());
+    }
+
+    /**
+     * [어드민] 멘토 승인
+     * POST /api/mentors/admin/{id}/approve
+     */
+    @PostMapping("/admin/{id}/approve")
+    public ResponseEntity<MentorDTO.ApplyMentorResponse> adminApproveMentor(
+            @AuthenticationPrincipal Object principal,
+            @PathVariable Long id) {
+        if (getUser(principal) == null) {
+            return ResponseEntity.status(401).body(
+                    MentorDTO.ApplyMentorResponse.builder().success(false).message("인증이 필요합니다.").build());
+        }
+        return ResponseEntity.ok(mentorService.approveMentor(id));
+    }
+
+    /**
+     * [어드민] 멘토 거절
+     * POST /api/mentors/admin/{id}/reject
+     */
+    @PostMapping("/admin/{id}/reject")
+    public ResponseEntity<MentorDTO.ApplyMentorResponse> adminRejectMentor(
+            @AuthenticationPrincipal Object principal,
+            @PathVariable Long id) {
+        if (getUser(principal) == null) {
+            return ResponseEntity.status(401).body(
+                    MentorDTO.ApplyMentorResponse.builder().success(false).message("인증이 필요합니다.").build());
+        }
+        return ResponseEntity.ok(mentorService.rejectMentor(id));
+    }
+
+    /**
      * Principal에서 User 조회
      */
     private User getUser(Object principal) {

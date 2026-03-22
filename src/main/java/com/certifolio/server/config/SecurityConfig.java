@@ -40,6 +40,8 @@ public class SecurityConfig {
                                                 .permitAll()
                                                 .requestMatchers("/oauth2/**", "/login/oauth2/**", "/login").permitAll()
                                                 .requestMatchers("/ws/**").permitAll()
+                                                // 어드민 멘토 관리 API - 인증 필요 (permitAll 규칙보다 먼저 선언)
+                                                .requestMatchers("/api/mentors/admin/**").authenticated()
                                                 // 멘토링 API - 검색/조회는 비인증 허용
                                                 .requestMatchers(org.springframework.http.HttpMethod.GET,
                                                                 "/api/mentors", "/api/mentors/**")

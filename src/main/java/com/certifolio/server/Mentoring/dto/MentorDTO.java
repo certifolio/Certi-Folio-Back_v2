@@ -159,4 +159,57 @@ public class MentorDTO {
         private String message;
         private Long mentorId;
     }
+
+    /**
+     * [어드민] 멘토 신청 아이템
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AdminMentorItem {
+        private Long id;
+        private String name;
+        private String company;
+        private String title;
+        private String experience;
+        private String createdAt;
+        private String status;
+        private String bio;
+        private List<String> skills;
+        private String preferredFormat;
+        private List<String> availabilities;
+
+        public static AdminMentorItem from(Mentor mentor) {
+            return AdminMentorItem.builder()
+                    .id(mentor.getId())
+                    .name(mentor.getName())
+                    .company(mentor.getCompany())
+                    .title(mentor.getTitle())
+                    .experience(mentor.getExperience())
+                    .createdAt(mentor.getCreatedAt() != null ? mentor.getCreatedAt().toString() : null)
+                    .status(mentor.getStatus().name().toLowerCase())
+                    .bio(mentor.getBio())
+                    .skills(mentor.getSkills().stream()
+                            .map(MentorSkill::getSkillName)
+                            .collect(Collectors.toList()))
+                    .preferredFormat(mentor.getPreferredFormat())
+                    .availabilities(mentor.getAvailabilities().stream()
+                            .map(a -> a.getTimeSlot())
+                            .collect(Collectors.toList()))
+                    .build();
+        }
+    }
+
+    /**
+     * [어드민] 멘토 신청 목록 응답
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AdminMentorsResponse {
+        private List<AdminMentorItem> mentors;
+        private int total;
+    }
 }

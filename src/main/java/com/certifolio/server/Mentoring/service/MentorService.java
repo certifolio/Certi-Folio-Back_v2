@@ -142,6 +142,54 @@ public class MentorService {
     }
 
     /**
+     * [어드민] 전체 멘토 신청 목록 조회
+     */
+    public MentorDTO.AdminMentorsResponse getAdminApplications() {
+        List<Mentor> mentors = mentorRepository.findAllByOrderByCreatedAtDesc();
+        List<MentorDTO.AdminMentorItem> items = mentors.stream()
+                .map(MentorDTO.AdminMentorItem::from)
+                .collect(Collectors.toList());
+        return MentorDTO.AdminMentorsResponse.builder()
+                .mentors(items)
+                .total(items.size())
+                .build();
+    }
+
+    /**
+     * [어드민] 멘토 승인
+     */
+    @Transactional
+    public MentorDTO.ApplyMentorResponse approveMentor(Long mentorId) {
+        Mentor mentor = mentorRepository.findById(mentorId)
+                .orElseThrow(() -> new RuntimeException("멘토를 찾을 수 없습니다."));
+        mentor.setStatus(MentorStatus.APPROVED);
+        mentorRepository.save(mentor);
+        log.info("멘토 승인: mentorId={}", mentorId);
+        return MentorDTO.ApplyMentorResponse.builder()
+                .success(true)
+                .message("멘토가 승인되었습니다.")
+                .mentorId(mentorId)
+                .build();
+    }
+
+    /**
+     * [어드민] 멘토 거절
+     */
+    @Transactional
+    public MentorDTO.ApplyMentorResponse rejectMentor(Long mentorId) {
+        Mentor mentor = mentorRepository.findById(mentorId)
+                .orElseThrow(() -> new RuntimeException("멘토를 찾을 수 없습니다."));
+        mentor.setStatus(MentorStatus.REJECTED);
+        mentorRepository.save(mentor);
+        log.info("멘토 거절: mentorId={}", mentorId);
+        return MentorDTO.ApplyMentorResponse.builder()
+                .success(true)
+                .message("멘토가 거절되었습니다.")
+                .mentorId(mentorId)
+                .build();
+    }
+
+    /**
      * 멘토 프로필 업데이트
      */
     @Transactional
