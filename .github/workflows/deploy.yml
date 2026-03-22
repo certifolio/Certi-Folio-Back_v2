@@ -20,8 +20,9 @@ jobs:
       - name: 3. application-secret.yml 만들기
         run: |
           mkdir -p ./src/main/resources
-          touch ./src/main/resources/application-secret.yml
-          echo "${{ secrets.APPLICATION_SECRET_YML }}" > ./src/main/resources/application-secret.yml
+          cat << 'EOF' > ./src/main/resources/application-secret.yml
+          ${{ secrets.APPLICATION_SECRET_YML }}
+          EOF
         shell: bash
 
       - name: 4. Spring Boot 빌드 (.jar 파일 만들기)
