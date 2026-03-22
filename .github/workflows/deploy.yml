@@ -17,12 +17,19 @@ jobs:
           java-version: '21'
           distribution: 'corretto'
 
-      - name: 3. Spring Boot 빌드 (.jar 파일 만들기)
+      - name: 3. application-secret.yml 만들기
+        run: |
+          mkdir -p ./src/main/resources
+          touch ./src/main/resources/application-secret.yml
+          echo "${{ secrets.APPLICATION_SECRET_YML }}" > ./src/main/resources/application-secret.yml
+        shell: bash
+
+      - name: 4. Spring Boot 빌드 (.jar 파일 만들기)
         run: |
           chmod +x ./gradlew
           ./gradlew clean build -x test
 
-      - name: 4. 완성된 파일을 EC2의 백엔드 폴더로 전달
+      - name: 5. 완성된 파일을 EC2의 백엔드 폴더로 전달
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -32,7 +39,7 @@ jobs:
           target: "~/backend"
           strip_components: 2
 
-      - name: 5. EC2 접속 후 기존 서버 끄고 새 서버 실행
+      - name: 6. EC2 접속 후 기존 서버 끄고 새 서버 실행
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
