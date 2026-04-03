@@ -167,6 +167,24 @@ WebSocket을 이용한 실시간 채팅 기능을 제공합니다.
 
 ---
 
+## 📄 커밋 컨벤션
+
+feat: 새로운 기능 추가
+fix: 버그 수정
+docs: 문서 수정
+style: 코드 스타일 변경 (코드 포매팅, 세미콜론 누락 등)
+design: 사용자 UI 디자인 변경 (CSS 등)
+test: 테스트 코드, 리팩토링 (Test Code)
+refactor: 리팩토링 (Production Code)
+build: 빌드 파일 수정
+ci: CI 설정 파일 수정
+perf: 성능 개선
+chore: 자잘한 수정이나 빌드 업데이트
+rename: 파일 혹은 폴더명을 수정만 한 경우
+remove: 파일을 삭제만 한 경우
+
+
+--
 ## 📄 라이선스
 
 본 프로젝트는 내부 학습/개발 목적으로 작성되었습니다.
