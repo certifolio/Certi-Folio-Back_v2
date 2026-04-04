@@ -7,6 +7,8 @@ import com.certifolio.server.domain.mentoring.dto.response.MentoringSessionRespo
 import com.certifolio.server.domain.mentoring.repository.MentorRepository;
 import com.certifolio.server.domain.mentoring.repository.MentoringSessionRepository;
 import com.certifolio.server.domain.user.repository.UserRepository;
+import com.certifolio.server.global.apiPayload.code.GeneralErrorCode;
+import com.certifolio.server.global.apiPayload.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -47,7 +49,7 @@ public class MentoringSessionService {
          */
         public MentoringSessionResponseDTO.SessionItem getSession(Long sessionId) {
                 MentoringSession session = sessionRepository.findById(sessionId)
-                                .orElseThrow(() -> new RuntimeException("세션을 찾을 수 없습니다."));
+                                .orElseThrow(() -> new BusinessException(GeneralErrorCode.MENTORING_SESSION_NOT_FOUND));
 
                 return MentoringSessionResponseDTO.SessionItem.from(session);
         }
@@ -60,10 +62,10 @@ public class MentoringSessionService {
                         Long userId, MentoringSessionRequestDTO.CreateSessionRequest request) {
 
                 User mentee = userRepository.findById(userId)
-                                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+                                .orElseThrow(() -> new BusinessException(GeneralErrorCode.USER_NOT_FOUND));
 
                 Mentor mentor = mentorRepository.findById(request.mentorId())
-                                .orElseThrow(() -> new RuntimeException("멘토를 찾을 수 없습니다."));
+                                .orElseThrow(() -> new BusinessException(GeneralErrorCode.MENTOR_NOT_FOUND));
 
                 MentoringSession session = MentoringSession.builder()
                                 .mentor(mentor)
@@ -92,25 +94,23 @@ public class MentoringSessionService {
                         Long sessionId, MentoringSessionRequestDTO.UpdateSessionStatusRequest request) {
 
                 MentoringSession session = sessionRepository.findById(sessionId)
-                                .orElseThrow(() -> new RuntimeException("세션을 찾을 수 없습니다."));
+                                .orElseThrow(() -> new BusinessException(GeneralErrorCode.MENTORING_SESSION_NOT_FOUND));
 
+                SessionStatus newStatus;
                 try {
-                        SessionStatus newStatus = SessionStatus.valueOf(request.status().toUpperCase());
-                        session.setStatus(newStatus);
-                        sessionRepository.save(session);
-
-                        log.info("세션 상태 업데이트: sessionId={}, newStatus={}", sessionId, newStatus);
-
-                        return MentoringSessionResponseDTO.UpdateSessionResponse.builder()
-                                        .success(true)
-                                        .message("세션 상태가 업데이트되었습니다.")
-                                        .build();
-
+                        newStatus = SessionStatus.valueOf(request.status().toUpperCase());
                 } catch (IllegalArgumentException e) {
-                        return MentoringSessionResponseDTO.UpdateSessionResponse.builder()
-                                        .success(false)
-                                        .message("잘못된 상태값입니다.")
-                                        .build();
+                        throw new BusinessException(GeneralErrorCode.MENTORING_INVALID_STATUS);
                 }
+
+                session.setStatus(newStatus);
+                sessionRepository.save(session);
+
+                log.info("세션 상태 업데이트: sessionId={}, newStatus={}", sessionId, newStatus);
+
+                return MentoringSessionResponseDTO.UpdateSessionResponse.builder()
+                                .success(true)
+                                .message("세션 상태가 업데이트되었습니다.")
+                                .build();
         }
 }

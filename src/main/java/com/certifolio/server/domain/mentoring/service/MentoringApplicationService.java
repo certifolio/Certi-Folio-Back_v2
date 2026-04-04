@@ -8,6 +8,8 @@ import com.certifolio.server.domain.mentoring.repository.MentorRepository;
 import com.certifolio.server.domain.mentoring.repository.MentoringApplicationRepository;
 import com.certifolio.server.domain.mentoring.repository.MentoringSessionRepository;
 import com.certifolio.server.domain.user.repository.UserRepository;
+import com.certifolio.server.global.apiPayload.code.GeneralErrorCode;
+import com.certifolio.server.global.apiPayload.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -36,25 +38,19 @@ public class MentoringApplicationService {
                         Long userId, MentoringApplicationRequestDTO.CreateRequest request) {
 
                 User mentee = userRepository.findById(userId)
-                                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+                                .orElseThrow(() -> new BusinessException(GeneralErrorCode.USER_NOT_FOUND));
 
                 Mentor mentor = mentorRepository.findById(request.mentorId())
-                                .orElseThrow(() -> new RuntimeException("멘토를 찾을 수 없습니다."));
+                                .orElseThrow(() -> new BusinessException(GeneralErrorCode.MENTOR_NOT_FOUND));
 
                 if (mentor.getUser().getId().equals(userId)) {
-                        return MentoringApplicationResponseDTO.CreateResponse.builder()
-                                        .success(false)
-                                        .message("자기 자신에게 멘토링을 신청할 수 없습니다.")
-                                        .build();
+                        throw new BusinessException(GeneralErrorCode.MENTORING_SELF_APPLICATION);
                 }
 
                 boolean alreadyApplied = applicationRepository.existsByMenteeIdAndMentorIdAndStatus(
                                 userId, mentor.getId(), ApplicationStatus.PENDING);
                 if (alreadyApplied) {
-                        return MentoringApplicationResponseDTO.CreateResponse.builder()
-                                        .success(false)
-                                        .message("이미 대기 중인 신청이 있습니다.")
-                                        .build();
+                        throw new BusinessException(GeneralErrorCode.MENTORING_ALREADY_APPLIED);
                 }
 
                 MentoringApplication application = MentoringApplication.builder()
@@ -124,23 +120,17 @@ public class MentoringApplicationService {
         @Transactional
         public MentoringApplicationResponseDTO.ActionResponse approveApplication(Long userId, Long applicationId) {
                 MentoringApplication application = applicationRepository.findById(applicationId)
-                                .orElseThrow(() -> new RuntimeException("신청을 찾을 수 없습니다."));
+                                .orElseThrow(() -> new BusinessException(GeneralErrorCode.MENTORING_APPLICATION_NOT_FOUND));
 
                 Mentor mentor = mentorRepository.findByUserId(userId)
-                                .orElseThrow(() -> new RuntimeException("멘토 권한이 필요합니다."));
+                                .orElseThrow(() -> new BusinessException(GeneralErrorCode.MENTOR_NOT_FOUND));
 
                 if (!application.getMentor().getId().equals(mentor.getId())) {
-                        return MentoringApplicationResponseDTO.ActionResponse.builder()
-                                        .success(false)
-                                        .message("본인에게 온 신청만 승인할 수 있습니다.")
-                                        .build();
+                        throw new BusinessException(GeneralErrorCode.MENTORING_APPLICATION_UNAUTHORIZED);
                 }
 
                 if (application.getStatus() != ApplicationStatus.PENDING) {
-                        return MentoringApplicationResponseDTO.ActionResponse.builder()
-                                        .success(false)
-                                        .message("이미 처리된 신청입니다.")
-                                        .build();
+                        throw new BusinessException(GeneralErrorCode.MENTORING_ALREADY_PROCESSED);
                 }
 
                 application.setStatus(ApplicationStatus.APPROVED);
@@ -173,23 +163,17 @@ public class MentoringApplicationService {
                         Long userId, Long applicationId, String reason) {
 
                 MentoringApplication application = applicationRepository.findById(applicationId)
-                                .orElseThrow(() -> new RuntimeException("신청을 찾을 수 없습니다."));
+                                .orElseThrow(() -> new BusinessException(GeneralErrorCode.MENTORING_APPLICATION_NOT_FOUND));
 
                 Mentor mentor = mentorRepository.findByUserId(userId)
-                                .orElseThrow(() -> new RuntimeException("멘토 권한이 필요합니다."));
+                                .orElseThrow(() -> new BusinessException(GeneralErrorCode.MENTOR_NOT_FOUND));
 
                 if (!application.getMentor().getId().equals(mentor.getId())) {
-                        return MentoringApplicationResponseDTO.ActionResponse.builder()
-                                        .success(false)
-                                        .message("본인에게 온 신청만 거절할 수 있습니다.")
-                                        .build();
+                        throw new BusinessException(GeneralErrorCode.MENTORING_APPLICATION_UNAUTHORIZED);
                 }
 
                 if (application.getStatus() != ApplicationStatus.PENDING) {
-                        return MentoringApplicationResponseDTO.ActionResponse.builder()
-                                        .success(false)
-                                        .message("이미 처리된 신청입니다.")
-                                        .build();
+                        throw new BusinessException(GeneralErrorCode.MENTORING_ALREADY_PROCESSED);
                 }
 
                 application.setStatus(ApplicationStatus.REJECTED);

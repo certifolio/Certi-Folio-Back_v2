@@ -10,6 +10,8 @@ import com.certifolio.server.domain.mentoring.repository.MentorRepository;
 import com.certifolio.server.domain.mentoring.repository.MentoringApplicationRepository;
 import com.certifolio.server.domain.user.entity.User;
 import com.certifolio.server.domain.user.repository.UserRepository;
+import com.certifolio.server.global.apiPayload.code.GeneralErrorCode;
+import com.certifolio.server.global.apiPayload.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -39,21 +41,21 @@ public class ChatService {
                                 .map(this::toChatRoomResponse)
                                 .orElseGet(() -> {
                                         Mentor mentor = mentorRepository.findById(mentorId)
-                                                        .orElseThrow(() -> new RuntimeException("멘토를 찾을 수 없습니다."));
+                                                        .orElseThrow(() -> new BusinessException(GeneralErrorCode.MENTOR_NOT_FOUND));
 
                                         if (mentor.getUser().getId().equals(userId)) {
-                                                throw new IllegalStateException("멘토 본인과는 채팅방을 생성할 수 없습니다.");
+                                                throw new BusinessException(GeneralErrorCode.SELF_CHAT_NOT_ALLOWED);
                                         }
 
                                         boolean hasApprovedApplication = mentoringApplicationRepository
                                                         .existsApprovedApplication(userId, mentorId);
 
                                         if (!hasApprovedApplication) {
-                                                throw new IllegalStateException("승인된 멘토링 관계가 있어야 채팅이 가능합니다.");
+                                                throw new BusinessException(GeneralErrorCode.MENTORING_NOT_APPROVED);
                                         }
 
                                         User user = userRepository.findById(userId)
-                                                        .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+                                                        .orElseThrow(() -> new BusinessException(GeneralErrorCode.USER_NOT_FOUND));
 
                                         ChatRoom room = ChatRoom.builder()
                                                         .mentor(mentor)
@@ -91,14 +93,14 @@ public class ChatService {
         @Transactional
         public ChatMessageResponseDTO.MessageResponse sendMessage(Long chatRoomId, Long senderId, String content) {
                 ChatRoom room = chatRoomRepository.findById(chatRoomId)
-                                .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다."));
+                                .orElseThrow(() -> new BusinessException(GeneralErrorCode.CHAT_ROOM_NOT_FOUND));
 
                 if (!isRoomParticipant(room, senderId)) {
-                        throw new IllegalStateException("해당 채팅방에 참여 권한이 없습니다.");
+                        throw new BusinessException(GeneralErrorCode.CHAT_ROOM_ACCESS_DENIED);
                 }
 
                 User sender = userRepository.findById(senderId)
-                                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+                                .orElseThrow(() -> new BusinessException(GeneralErrorCode.USER_NOT_FOUND));
 
                 ChatMessage message = ChatMessage.builder()
                                 .chatRoom(room)
@@ -123,10 +125,10 @@ public class ChatService {
         @Transactional
         public ChatMessageResponseDTO.MessageResponse sendSystemMessage(Long chatRoomId, Long senderId, String content) {
                 ChatRoom room = chatRoomRepository.findById(chatRoomId)
-                                .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다."));
+                                .orElseThrow(() -> new BusinessException(GeneralErrorCode.CHAT_ROOM_NOT_FOUND));
 
                 User sender = userRepository.findById(senderId)
-                                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+                                .orElseThrow(() -> new BusinessException(GeneralErrorCode.USER_NOT_FOUND));
 
                 ChatMessage message = ChatMessage.builder()
                                 .chatRoom(room)
@@ -199,10 +201,10 @@ public class ChatService {
 
         private ChatRoom validateAndGetRoom(Long chatRoomId, Long currentUserId) {
                 ChatRoom room = chatRoomRepository.findById(chatRoomId)
-                                .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다."));
+                                .orElseThrow(() -> new BusinessException(GeneralErrorCode.CHAT_ROOM_NOT_FOUND));
 
                 if (currentUserId != null && !isRoomParticipant(room, currentUserId)) {
-                        throw new IllegalStateException("해당 채팅방에 참여 권한이 없습니다.");
+                        throw new BusinessException(GeneralErrorCode.CHAT_ROOM_ACCESS_DENIED);
                 }
 
                 return room;

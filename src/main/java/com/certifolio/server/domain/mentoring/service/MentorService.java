@@ -10,6 +10,8 @@ import com.certifolio.server.domain.mentoring.dto.request.MentorRequestDTO;
 import com.certifolio.server.domain.mentoring.dto.response.MentorResponseDTO;
 import com.certifolio.server.domain.mentoring.repository.*;
 import com.certifolio.server.domain.user.repository.UserRepository;
+import com.certifolio.server.global.apiPayload.code.GeneralErrorCode;
+import com.certifolio.server.global.apiPayload.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -57,7 +59,7 @@ public class MentorService {
      */
     public MentorResponseDTO.MentorProfileResponse getMentorProfile(Long mentorId) {
         Mentor mentor = mentorRepository.findById(mentorId)
-                .orElseThrow(() -> new RuntimeException("멘토를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(GeneralErrorCode.MENTOR_NOT_FOUND));
 
         return buildMentorProfileResponse(mentor);
     }
@@ -68,14 +70,11 @@ public class MentorService {
     @Transactional
     public MentorResponseDTO.ApplyMentorResponse applyMentor(Long userId, MentorRequestDTO.MentorApplicationRequest request) {
         if (mentorRepository.existsByUserId(userId)) {
-            return MentorResponseDTO.ApplyMentorResponse.builder()
-                    .success(false)
-                    .message("이미 멘토 신청을 하셨습니다.")
-                    .build();
+            throw new BusinessException(GeneralErrorCode.MENTOR_ALREADY_APPLIED);
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(GeneralErrorCode.USER_NOT_FOUND));
 
         Mentor mentor = Mentor.builder()
                 .user(user)
@@ -107,7 +106,7 @@ public class MentorService {
      */
     public MentorResponseDTO.MentorProfileResponse getMyMentorProfile(Long userId) {
         Mentor mentor = mentorRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("멘토 프로필이 없습니다."));
+                .orElseThrow(() -> new BusinessException(GeneralErrorCode.MENTOR_NOT_FOUND));
 
         return buildMentorProfileResponse(mentor);
     }
@@ -118,7 +117,7 @@ public class MentorService {
     @Transactional
     public MentorResponseDTO.ApplyMentorResponse updateMentorProfile(Long userId, MentorRequestDTO.MentorApplicationRequest request) {
         Mentor mentor = mentorRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("멘토 프로필이 없습니다."));
+                .orElseThrow(() -> new BusinessException(GeneralErrorCode.MENTOR_NOT_FOUND));
 
         mentor.setTitle(request.title());
         mentor.setCompany(request.company());
