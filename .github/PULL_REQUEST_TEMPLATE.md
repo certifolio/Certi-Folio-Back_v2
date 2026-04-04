@@ -1,12 +1,3 @@
----
-name: PR 템플릿
-about: PR 작성 템플릿
-title: ''
-labels: ''
-assignees: ''
-
----
-
 ## 📌 PR 설명
 ## 👩‍💻 작업 내용
 - 
