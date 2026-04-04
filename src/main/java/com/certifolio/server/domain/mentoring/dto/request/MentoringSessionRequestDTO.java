@@ -4,7 +4,6 @@ public class MentoringSessionRequestDTO {
 
     public record CreateSessionRequest(
             Long mentorId,
-            Long requestId,
             String topic
     ) {}
 

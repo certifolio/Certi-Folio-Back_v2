@@ -7,7 +7,6 @@ import com.certifolio.server.domain.user.entity.User;
 import com.certifolio.server.domain.mentoring.entity.Mentor;
 import com.certifolio.server.domain.mentoring.repository.MentorRepository;
 import com.certifolio.server.domain.user.repository.UserRepository;
-import com.certifolio.server.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +23,6 @@ import org.springframework.web.bind.annotation.*;
 public class ChatController {
 
     private final ChatService chatService;
-    private final UserService userService;
     private final UserRepository userRepository;
     private final MentorRepository mentorRepository;
     private final SimpMessagingTemplate messagingTemplate;
