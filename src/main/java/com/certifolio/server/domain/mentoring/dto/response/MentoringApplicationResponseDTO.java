@@ -1,27 +1,12 @@
-package com.certifolio.server.Mentoring.dto;
+package com.certifolio.server.domain.mentoring.dto.response;
 
-import com.certifolio.server.Mentoring.domain.MentoringApplication;
+import com.certifolio.server.domain.mentoring.entity.MentoringApplication;
 import lombok.Builder;
 
 import java.util.List;
 
-/**
- * 멘토링 신청 관련 DTO (Java Record)
- */
-public class MentoringApplicationDTO {
+public class MentoringApplicationResponseDTO {
 
-    /**
-     * 신청 생성 요청
-     */
-    public record CreateRequest(
-            Long mentorId,
-            String topic,
-            String description
-    ) {}
-
-    /**
-     * 신청 생성 응답
-     */
     @Builder
     public record CreateResponse(
             boolean success,
@@ -29,18 +14,12 @@ public class MentoringApplicationDTO {
             Long applicationId
     ) {}
 
-    /**
-     * 신청 목록 응답
-     */
     @Builder
     public record ApplicationsResponse(
             List<ApplicationItem> applications,
             int total
     ) {}
 
-    /**
-     * 신청 아이템
-     */
     @Builder
     public record ApplicationItem(
             Long id,
@@ -70,20 +49,10 @@ public class MentoringApplicationDTO {
         }
     }
 
-    /**
-     * 승인/거절 응답
-     */
     @Builder
     public record ActionResponse(
             boolean success,
             String message,
             Long sessionId
-    ) {}
-
-    /**
-     * 거절 요청
-     */
-    public record RejectRequest(
-            String reason
     ) {}
 }

@@ -1,35 +1,12 @@
-package com.certifolio.server.Mentoring.dto;
+package com.certifolio.server.domain.mentoring.dto.response;
 
 import lombok.Builder;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * 채팅 관련 DTO (Java Record)
- */
-public class ChatMessageDTO {
+public class ChatMessageResponseDTO {
 
-    /**
-     * WebSocket으로 메시지 전송 시 요청 DTO
-     */
-    public record SendRequest(
-            Long chatRoomId,
-            String content,
-            String senderSubject
-    ) {}
-
-    /**
-     * 채팅방 생성/조회 요청 DTO
-     */
-    public record CreateRoomRequest(
-            Long mentorId,
-            Long userId
-    ) {}
-
-    /**
-     * 개별 메시지 응답 DTO
-     */
     @Builder
     public record MessageResponse(
             Long id,
@@ -43,9 +20,6 @@ public class ChatMessageDTO {
             boolean isMine
     ) {}
 
-    /**
-     * 채팅 기록 응답 DTO
-     */
     @Builder
     public record ChatHistoryResponse(
             boolean success,
@@ -54,9 +28,6 @@ public class ChatMessageDTO {
             int totalCount
     ) {}
 
-    /**
-     * 채팅방 정보 응답 DTO
-     */
     @Builder
     public record ChatRoomResponse(
             Long chatRoomId,
@@ -72,9 +43,6 @@ public class ChatMessageDTO {
             LocalDateTime lastMessageAt
     ) {}
 
-    /**
-     * 내 채팅방 목록 응답 DTO
-     */
     @Builder
     public record ChatRoomListResponse(
             boolean success,

@@ -1,29 +1,20 @@
-package com.certifolio.server.Mentoring.dto;
+package com.certifolio.server.domain.mentoring.dto.response;
 
-import com.certifolio.server.Mentoring.domain.Mentor;
-import com.certifolio.server.Mentoring.domain.MentoringSession;
+import com.certifolio.server.domain.mentoring.entity.Mentor;
+import com.certifolio.server.domain.mentoring.entity.MentoringSession;
 import lombok.Builder;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * 멘토링 세션 관련 DTO (Java Record)
- */
-public class MentoringSessionDTO {
+public class MentoringSessionResponseDTO {
 
-    /**
-     * 세션 목록 응답
-     */
     @Builder
     public record SessionsResponse(
             List<SessionItem> sessions,
             int total
     ) {}
 
-    /**
-     * 세션 아이템
-     */
     @Builder
     public record SessionItem(
             Long id,
@@ -43,9 +34,6 @@ public class MentoringSessionDTO {
         }
     }
 
-    /**
-     * 세션 내 멘토 정보
-     */
     @Builder
     public record SessionMentor(
             String name,
@@ -65,25 +53,6 @@ public class MentoringSessionDTO {
         }
     }
 
-    /**
-     * 세션 생성 요청
-     */
-    public record CreateSessionRequest(
-            Long mentorId,
-            Long requestId,
-            String topic
-    ) {}
-
-    /**
-     * 세션 상태 업데이트 요청
-     */
-    public record UpdateSessionStatusRequest(
-            String status
-    ) {}
-
-    /**
-     * 세션 업데이트 응답
-     */
     @Builder
     public record UpdateSessionResponse(
             boolean success,
