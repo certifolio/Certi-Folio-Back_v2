@@ -1,13 +1,15 @@
-package com.certifolio.server.Mentoring.service;
+package com.certifolio.server.domain.mentoring.service;
 
-import com.certifolio.server.Mentoring.domain.*;
-import com.certifolio.server.User.domain.User;
-import com.certifolio.server.Form.Career.dto.CareerDTO;
-import com.certifolio.server.Form.Education.dto.EducationDTO;
-import com.certifolio.server.Mentoring.dto.MentorDTO;
-import com.certifolio.server.Mentoring.repository.*;
-import com.certifolio.server.User.repository.UserRepository;
-import com.certifolio.server.User.service.UserService;
+import com.certifolio.server.domain.mentoring.entity.*;
+import com.certifolio.server.domain.user.entity.User;
+import com.certifolio.server.domain.form.career.dto.response.CareerResponseDTO;
+import com.certifolio.server.domain.form.career.service.CareerService;
+import com.certifolio.server.domain.form.education.dto.response.EducationResponseDTO;
+import com.certifolio.server.domain.form.education.service.EducationService;
+import com.certifolio.server.domain.mentoring.dto.request.MentorRequestDTO;
+import com.certifolio.server.domain.mentoring.dto.response.MentorResponseDTO;
+import com.certifolio.server.domain.mentoring.repository.*;
+import com.certifolio.server.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,12 +27,13 @@ public class MentorService {
 
     private final MentorRepository mentorRepository;
     private final UserRepository userRepository;
-    private final UserService userService; // UserService를 통해 User 관련 데이터 조회
+    private final CareerService careerService;
+    private final EducationService educationService;
 
     /**
      * 멘토 검색/목록 조회
      */
-    public MentorDTO.MentorsResponse searchMentors(List<String> skills) {
+    public MentorResponseDTO.MentorsResponse searchMentors(List<String> skills) {
         List<Mentor> mentors;
 
         if (skills != null && !skills.isEmpty()) {
@@ -39,11 +42,11 @@ public class MentorService {
             mentors = mentorRepository.findByStatus(MentorStatus.APPROVED);
         }
 
-        List<MentorDTO.MentorListItem> mentorItems = mentors.stream()
-                .map(MentorDTO.MentorListItem::from)
+        List<MentorResponseDTO.MentorListItem> mentorItems = mentors.stream()
+                .map(MentorResponseDTO.MentorListItem::from)
                 .collect(Collectors.toList());
 
-        return MentorDTO.MentorsResponse.builder()
+        return MentorResponseDTO.MentorsResponse.builder()
                 .mentors(mentorItems)
                 .total(mentorItems.size())
                 .build();
@@ -52,7 +55,7 @@ public class MentorService {
     /**
      * 멘토 프로필 상세 조회
      */
-    public MentorDTO.MentorProfileResponse getMentorProfile(Long mentorId) {
+    public MentorResponseDTO.MentorProfileResponse getMentorProfile(Long mentorId) {
         Mentor mentor = mentorRepository.findById(mentorId)
                 .orElseThrow(() -> new RuntimeException("멘토를 찾을 수 없습니다."));
 
@@ -63,10 +66,9 @@ public class MentorService {
      * 멘토 신청
      */
     @Transactional
-    public MentorDTO.ApplyMentorResponse applyMentor(Long userId, MentorDTO.MentorApplicationRequest request) {
-        // 이미 멘토인지 확인
+    public MentorResponseDTO.ApplyMentorResponse applyMentor(Long userId, MentorRequestDTO.MentorApplicationRequest request) {
         if (mentorRepository.existsByUserId(userId)) {
-            return MentorDTO.ApplyMentorResponse.builder()
+            return MentorResponseDTO.ApplyMentorResponse.builder()
                     .success(false)
                     .message("이미 멘토 신청을 하셨습니다.")
                     .build();
@@ -75,7 +77,6 @@ public class MentorService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
-        // 멘토 생성
         Mentor mentor = Mentor.builder()
                 .user(user)
                 .title(request.title())
@@ -89,14 +90,12 @@ public class MentorService {
                 .build();
 
         mentorRepository.save(mentor);
-
         saveSkillsAndAvailabilities(mentor, request);
-
         mentorRepository.save(mentor);
 
         log.info("새 멘토 신청: userId={}, mentorId={}", userId, mentor.getId());
 
-        return MentorDTO.ApplyMentorResponse.builder()
+        return MentorResponseDTO.ApplyMentorResponse.builder()
                 .success(true)
                 .message("멘토 신청이 완료되었습니다. 심사 후 연락드리겠습니다.")
                 .mentorId(mentor.getId())
@@ -106,7 +105,7 @@ public class MentorService {
     /**
      * 내 멘토 프로필 조회
      */
-    public MentorDTO.MentorProfileResponse getMyMentorProfile(Long userId) {
+    public MentorResponseDTO.MentorProfileResponse getMyMentorProfile(Long userId) {
         Mentor mentor = mentorRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("멘토 프로필이 없습니다."));
 
@@ -117,7 +116,7 @@ public class MentorService {
      * 멘토 프로필 업데이트
      */
     @Transactional
-    public MentorDTO.ApplyMentorResponse updateMentorProfile(Long userId, MentorDTO.MentorApplicationRequest request) {
+    public MentorResponseDTO.ApplyMentorResponse updateMentorProfile(Long userId, MentorRequestDTO.MentorApplicationRequest request) {
         Mentor mentor = mentorRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("멘토 프로필이 없습니다."));
 
@@ -127,38 +126,28 @@ public class MentorService {
         mentor.setBio(request.bio());
         mentor.setPreferredFormat(request.preferredFormat());
 
-        // 기존 스킬/가용시간 삭제 후 재생성
         mentor.getSkills().clear();
         mentor.getAvailabilities().clear();
 
         saveSkillsAndAvailabilities(mentor, request);
-
         mentorRepository.save(mentor);
 
-        return MentorDTO.ApplyMentorResponse.builder()
+        return MentorResponseDTO.ApplyMentorResponse.builder()
                 .success(true)
                 .message("멘토 프로필이 업데이트되었습니다.")
                 .mentorId(mentor.getId())
                 .build();
     }
 
-    // ===== Private Helper Methods =====
-
-    /**
-     * Mentor 엔티티로부터 프로필 응답 DTO 생성 (공통 로직)
-     */
-    private MentorDTO.MentorProfileResponse buildMentorProfileResponse(Mentor mentor) {
+    private MentorResponseDTO.MentorProfileResponse buildMentorProfileResponse(Mentor mentor) {
         Long userId = mentor.getUser().getId();
-        List<EducationDTO> educationList = userService.getEducationsByUserId(userId);
-        List<CareerDTO> careerList = userService.getCareersByUserId(userId);
+        List<EducationResponseDTO> educationList = educationService.getEducations(userId);
+        List<CareerResponseDTO> careerList = careerService.getCareers(userId);
 
-        return MentorDTO.MentorProfileResponse.from(mentor, educationList, careerList);
+        return MentorResponseDTO.MentorProfileResponse.from(mentor, educationList, careerList);
     }
 
-    /**
-     * 멘토에 스킬 및 가용시간 저장 (공통 로직)
-     */
-    private void saveSkillsAndAvailabilities(Mentor mentor, MentorDTO.MentorApplicationRequest request) {
+    private void saveSkillsAndAvailabilities(Mentor mentor, MentorRequestDTO.MentorApplicationRequest request) {
         if (request.expertise() != null) {
             for (String skillName : request.expertise()) {
                 MentorSkill skill = MentorSkill.builder()

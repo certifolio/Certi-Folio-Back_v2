@@ -1,10 +1,8 @@
-package com.certifolio.server.Mentoring.controller;
+package com.certifolio.server.domain.mentoring.controller;
 
-import com.certifolio.server.User.domain.User;
-import com.certifolio.server.Mentoring.dto.MentoringSessionDTO;
-import com.certifolio.server.User.repository.UserRepository;
-import com.certifolio.server.Mentoring.service.MentoringSessionService;
-import com.certifolio.server.auth.util.AuthUtils;
+import com.certifolio.server.domain.mentoring.dto.request.MentoringSessionRequestDTO;
+import com.certifolio.server.domain.mentoring.dto.response.MentoringSessionResponseDTO;
+import com.certifolio.server.domain.mentoring.service.MentoringSessionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -18,22 +16,16 @@ import org.springframework.web.bind.annotation.*;
 public class MentoringSessionController {
 
     private final MentoringSessionService sessionService;
-    private final UserRepository userRepository;
 
     /**
      * 내 멘토링 세션 목록 조회
      * GET /api/mentoring/sessions
      */
     @GetMapping
-    public ResponseEntity<MentoringSessionDTO.SessionsResponse> getMySessions(
-            @AuthenticationPrincipal Object principal) {
+    public ResponseEntity<MentoringSessionResponseDTO.SessionsResponse> getMySessions(
+            @AuthenticationPrincipal Long userId) {
 
-        User user = getUser(principal);
-        if (user == null) {
-            return ResponseEntity.status(401).build();
-        }
-
-        MentoringSessionDTO.SessionsResponse response = sessionService.getMySessions(user.getId());
+        MentoringSessionResponseDTO.SessionsResponse response = sessionService.getMySessions(userId);
         return ResponseEntity.ok(response);
     }
 
@@ -42,10 +34,10 @@ public class MentoringSessionController {
      * GET /api/mentoring/sessions/{sessionId}
      */
     @GetMapping("/{sessionId}")
-    public ResponseEntity<MentoringSessionDTO.SessionItem> getSession(
+    public ResponseEntity<MentoringSessionResponseDTO.SessionItem> getSession(
             @PathVariable Long sessionId) {
 
-        MentoringSessionDTO.SessionItem response = sessionService.getSession(sessionId);
+        MentoringSessionResponseDTO.SessionItem response = sessionService.getSession(sessionId);
         return ResponseEntity.ok(response);
     }
 
@@ -54,20 +46,11 @@ public class MentoringSessionController {
      * POST /api/mentoring/sessions
      */
     @PostMapping
-    public ResponseEntity<MentoringSessionDTO.UpdateSessionResponse> createSession(
-            @AuthenticationPrincipal Object principal,
-            @RequestBody MentoringSessionDTO.CreateSessionRequest request) {
+    public ResponseEntity<MentoringSessionResponseDTO.UpdateSessionResponse> createSession(
+            @AuthenticationPrincipal Long userId,
+            @RequestBody MentoringSessionRequestDTO.CreateSessionRequest request) {
 
-        User user = getUser(principal);
-        if (user == null) {
-            return ResponseEntity.status(401).body(
-                    MentoringSessionDTO.UpdateSessionResponse.builder()
-                            .success(false)
-                            .message("인증이 필요합니다.")
-                            .build());
-        }
-
-        MentoringSessionDTO.UpdateSessionResponse response = sessionService.createSession(user.getId(), request);
+        MentoringSessionResponseDTO.UpdateSessionResponse response = sessionService.createSession(userId, request);
 
         if (response.success()) {
             return ResponseEntity.ok(response);
@@ -81,23 +64,16 @@ public class MentoringSessionController {
      * PATCH /api/mentoring/sessions/{sessionId}/status
      */
     @PatchMapping("/{sessionId}/status")
-    public ResponseEntity<MentoringSessionDTO.UpdateSessionResponse> updateSessionStatus(
+    public ResponseEntity<MentoringSessionResponseDTO.UpdateSessionResponse> updateSessionStatus(
             @PathVariable Long sessionId,
-            @RequestBody MentoringSessionDTO.UpdateSessionStatusRequest request) {
+            @RequestBody MentoringSessionRequestDTO.UpdateSessionStatusRequest request) {
 
-        MentoringSessionDTO.UpdateSessionResponse response = sessionService.updateSessionStatus(sessionId, request);
+        MentoringSessionResponseDTO.UpdateSessionResponse response = sessionService.updateSessionStatus(sessionId, request);
 
         if (response.success()) {
             return ResponseEntity.ok(response);
         } else {
             return ResponseEntity.badRequest().body(response);
         }
-    }
-
-    /**
-     * Principal에서 User 조회
-     */
-    private User getUser(Object principal) {
-        return AuthUtils.resolveUser(principal, userRepository);
     }
 }

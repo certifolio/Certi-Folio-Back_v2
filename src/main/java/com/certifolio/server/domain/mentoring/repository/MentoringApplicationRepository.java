@@ -1,7 +1,7 @@
-package com.certifolio.server.Mentoring.repository;
+package com.certifolio.server.domain.mentoring.repository;
 
-import com.certifolio.server.Mentoring.domain.ApplicationStatus;
-import com.certifolio.server.Mentoring.domain.MentoringApplication;
+import com.certifolio.server.domain.mentoring.entity.ApplicationStatus;
+import com.certifolio.server.domain.mentoring.entity.MentoringApplication;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

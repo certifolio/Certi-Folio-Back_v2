@@ -1,10 +1,8 @@
-package com.certifolio.server.Mentoring.controller;
+package com.certifolio.server.domain.mentoring.controller;
 
-import com.certifolio.server.User.domain.User;
-import com.certifolio.server.Mentoring.dto.MentoringApplicationDTO;
-import com.certifolio.server.User.repository.UserRepository;
-import com.certifolio.server.Mentoring.service.MentoringApplicationService;
-import com.certifolio.server.auth.util.AuthUtils;
+import com.certifolio.server.domain.mentoring.dto.request.MentoringApplicationRequestDTO;
+import com.certifolio.server.domain.mentoring.dto.response.MentoringApplicationResponseDTO;
+import com.certifolio.server.domain.mentoring.service.MentoringApplicationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -18,27 +16,17 @@ import org.springframework.web.bind.annotation.*;
 public class MentoringApplicationController {
 
     private final MentoringApplicationService applicationService;
-    private final UserRepository userRepository;
 
     /**
      * 멘토링 신청
      * POST /api/mentoring-applications
      */
     @PostMapping
-    public ResponseEntity<MentoringApplicationDTO.CreateResponse> createApplication(
-            @AuthenticationPrincipal Object principal,
-            @RequestBody MentoringApplicationDTO.CreateRequest request) {
+    public ResponseEntity<MentoringApplicationResponseDTO.CreateResponse> createApplication(
+            @AuthenticationPrincipal Long userId,
+            @RequestBody MentoringApplicationRequestDTO.CreateRequest request) {
 
-        User user = getUser(principal);
-        if (user == null) {
-            return ResponseEntity.status(401).body(
-                    MentoringApplicationDTO.CreateResponse.builder()
-                            .success(false)
-                            .message("인증이 필요합니다.")
-                            .build());
-        }
-
-        MentoringApplicationDTO.CreateResponse response = applicationService.createApplication(user.getId(), request);
+        MentoringApplicationResponseDTO.CreateResponse response = applicationService.createApplication(userId, request);
 
         if (response.success()) {
             return ResponseEntity.ok(response);
@@ -52,16 +40,10 @@ public class MentoringApplicationController {
      * GET /api/mentoring-applications/received
      */
     @GetMapping("/received")
-    public ResponseEntity<MentoringApplicationDTO.ApplicationsResponse> getReceivedApplications(
-            @AuthenticationPrincipal Object principal) {
+    public ResponseEntity<MentoringApplicationResponseDTO.ApplicationsResponse> getReceivedApplications(
+            @AuthenticationPrincipal Long userId) {
 
-        User user = getUser(principal);
-        if (user == null) {
-            return ResponseEntity.status(401).build();
-        }
-
-        MentoringApplicationDTO.ApplicationsResponse response = applicationService
-                .getReceivedApplications(user.getId());
+        MentoringApplicationResponseDTO.ApplicationsResponse response = applicationService.getReceivedApplications(userId);
         return ResponseEntity.ok(response);
     }
 
@@ -70,15 +52,10 @@ public class MentoringApplicationController {
      * GET /api/mentoring-applications/sent
      */
     @GetMapping("/sent")
-    public ResponseEntity<MentoringApplicationDTO.ApplicationsResponse> getSentApplications(
-            @AuthenticationPrincipal Object principal) {
+    public ResponseEntity<MentoringApplicationResponseDTO.ApplicationsResponse> getSentApplications(
+            @AuthenticationPrincipal Long userId) {
 
-        User user = getUser(principal);
-        if (user == null) {
-            return ResponseEntity.status(401).build();
-        }
-
-        MentoringApplicationDTO.ApplicationsResponse response = applicationService.getSentApplications(user.getId());
+        MentoringApplicationResponseDTO.ApplicationsResponse response = applicationService.getSentApplications(userId);
         return ResponseEntity.ok(response);
     }
 
@@ -87,20 +64,11 @@ public class MentoringApplicationController {
      * POST /api/mentoring-applications/{id}/approve
      */
     @PostMapping("/{id}/approve")
-    public ResponseEntity<MentoringApplicationDTO.ActionResponse> approveApplication(
-            @AuthenticationPrincipal Object principal,
+    public ResponseEntity<MentoringApplicationResponseDTO.ActionResponse> approveApplication(
+            @AuthenticationPrincipal Long userId,
             @PathVariable Long id) {
 
-        User user = getUser(principal);
-        if (user == null) {
-            return ResponseEntity.status(401).body(
-                    MentoringApplicationDTO.ActionResponse.builder()
-                            .success(false)
-                            .message("인증이 필요합니다.")
-                            .build());
-        }
-
-        MentoringApplicationDTO.ActionResponse response = applicationService.approveApplication(user.getId(), id);
+        MentoringApplicationResponseDTO.ActionResponse response = applicationService.approveApplication(userId, id);
 
         if (response.success()) {
             return ResponseEntity.ok(response);
@@ -114,35 +82,18 @@ public class MentoringApplicationController {
      * POST /api/mentoring-applications/{id}/reject
      */
     @PostMapping("/{id}/reject")
-    public ResponseEntity<MentoringApplicationDTO.ActionResponse> rejectApplication(
-            @AuthenticationPrincipal Object principal,
+    public ResponseEntity<MentoringApplicationResponseDTO.ActionResponse> rejectApplication(
+            @AuthenticationPrincipal Long userId,
             @PathVariable Long id,
-            @RequestBody(required = false) MentoringApplicationDTO.RejectRequest request) {
-
-        User user = getUser(principal);
-        if (user == null) {
-            return ResponseEntity.status(401).body(
-                    MentoringApplicationDTO.ActionResponse.builder()
-                            .success(false)
-                            .message("인증이 필요합니다.")
-                            .build());
-        }
+            @RequestBody(required = false) MentoringApplicationRequestDTO.RejectRequest request) {
 
         String reason = request != null ? request.reason() : null;
-        MentoringApplicationDTO.ActionResponse response = applicationService.rejectApplication(user.getId(), id,
-                reason);
+        MentoringApplicationResponseDTO.ActionResponse response = applicationService.rejectApplication(userId, id, reason);
 
         if (response.success()) {
             return ResponseEntity.ok(response);
         } else {
             return ResponseEntity.badRequest().body(response);
         }
-    }
-
-    /**
-     * Principal에서 User 조회
-     */
-    private User getUser(Object principal) {
-        return AuthUtils.resolveUser(principal, userRepository);
     }
 }

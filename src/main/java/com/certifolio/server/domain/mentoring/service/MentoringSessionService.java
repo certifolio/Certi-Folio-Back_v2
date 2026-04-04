@@ -1,11 +1,12 @@
-package com.certifolio.server.Mentoring.service;
+package com.certifolio.server.domain.mentoring.service;
 
-import com.certifolio.server.Mentoring.domain.*;
-import com.certifolio.server.User.domain.User;
-import com.certifolio.server.Mentoring.dto.MentoringSessionDTO;
-import com.certifolio.server.Mentoring.repository.MentorRepository;
-import com.certifolio.server.Mentoring.repository.MentoringSessionRepository;
-import com.certifolio.server.User.repository.UserRepository;
+import com.certifolio.server.domain.mentoring.entity.*;
+import com.certifolio.server.domain.user.entity.User;
+import com.certifolio.server.domain.mentoring.dto.request.MentoringSessionRequestDTO;
+import com.certifolio.server.domain.mentoring.dto.response.MentoringSessionResponseDTO;
+import com.certifolio.server.domain.mentoring.repository.MentorRepository;
+import com.certifolio.server.domain.mentoring.repository.MentoringSessionRepository;
+import com.certifolio.server.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,14 +29,14 @@ public class MentoringSessionService {
         /**
          * 내 멘토링 세션 목록 조회
          */
-        public MentoringSessionDTO.SessionsResponse getMySessions(Long userId) {
+        public MentoringSessionResponseDTO.SessionsResponse getMySessions(Long userId) {
                 List<MentoringSession> sessions = sessionRepository.findByUserIdOrderByCreatedAtDesc(userId);
 
-                List<MentoringSessionDTO.SessionItem> sessionItems = sessions.stream()
-                                .map(MentoringSessionDTO.SessionItem::from)
+                List<MentoringSessionResponseDTO.SessionItem> sessionItems = sessions.stream()
+                                .map(MentoringSessionResponseDTO.SessionItem::from)
                                 .collect(Collectors.toList());
 
-                return MentoringSessionDTO.SessionsResponse.builder()
+                return MentoringSessionResponseDTO.SessionsResponse.builder()
                                 .sessions(sessionItems)
                                 .total(sessionItems.size())
                                 .build();
@@ -44,20 +45,19 @@ public class MentoringSessionService {
         /**
          * 세션 상세 조회
          */
-        public MentoringSessionDTO.SessionItem getSession(Long sessionId) {
+        public MentoringSessionResponseDTO.SessionItem getSession(Long sessionId) {
                 MentoringSession session = sessionRepository.findById(sessionId)
                                 .orElseThrow(() -> new RuntimeException("세션을 찾을 수 없습니다."));
 
-                return MentoringSessionDTO.SessionItem.from(session);
+                return MentoringSessionResponseDTO.SessionItem.from(session);
         }
 
         /**
          * 새 세션 생성
          */
         @Transactional
-        public MentoringSessionDTO.UpdateSessionResponse createSession(
-                        Long userId,
-                        MentoringSessionDTO.CreateSessionRequest request) {
+        public MentoringSessionResponseDTO.UpdateSessionResponse createSession(
+                        Long userId, MentoringSessionRequestDTO.CreateSessionRequest request) {
 
                 User mentee = userRepository.findById(userId)
                                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
@@ -78,7 +78,7 @@ public class MentoringSessionService {
                 log.info("새 멘토링 세션 생성: menteeId={}, mentorId={}, sessionId={}",
                                 userId, request.mentorId(), session.getId());
 
-                return MentoringSessionDTO.UpdateSessionResponse.builder()
+                return MentoringSessionResponseDTO.UpdateSessionResponse.builder()
                                 .success(true)
                                 .message("멘토링 세션이 생성되었습니다.")
                                 .build();
@@ -88,9 +88,8 @@ public class MentoringSessionService {
          * 세션 상태 업데이트
          */
         @Transactional
-        public MentoringSessionDTO.UpdateSessionResponse updateSessionStatus(
-                        Long sessionId,
-                        MentoringSessionDTO.UpdateSessionStatusRequest request) {
+        public MentoringSessionResponseDTO.UpdateSessionResponse updateSessionStatus(
+                        Long sessionId, MentoringSessionRequestDTO.UpdateSessionStatusRequest request) {
 
                 MentoringSession session = sessionRepository.findById(sessionId)
                                 .orElseThrow(() -> new RuntimeException("세션을 찾을 수 없습니다."));
@@ -98,18 +97,17 @@ public class MentoringSessionService {
                 try {
                         SessionStatus newStatus = SessionStatus.valueOf(request.status().toUpperCase());
                         session.setStatus(newStatus);
-
                         sessionRepository.save(session);
 
                         log.info("세션 상태 업데이트: sessionId={}, newStatus={}", sessionId, newStatus);
 
-                        return MentoringSessionDTO.UpdateSessionResponse.builder()
+                        return MentoringSessionResponseDTO.UpdateSessionResponse.builder()
                                         .success(true)
                                         .message("세션 상태가 업데이트되었습니다.")
                                         .build();
 
                 } catch (IllegalArgumentException e) {
-                        return MentoringSessionDTO.UpdateSessionResponse.builder()
+                        return MentoringSessionResponseDTO.UpdateSessionResponse.builder()
                                         .success(false)
                                         .message("잘못된 상태값입니다.")
                                         .build();

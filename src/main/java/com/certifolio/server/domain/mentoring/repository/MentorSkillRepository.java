@@ -1,6 +1,6 @@
-package com.certifolio.server.Mentoring.repository;
+package com.certifolio.server.domain.mentoring.repository;
 
-import com.certifolio.server.Mentoring.domain.MentorSkill;
+import com.certifolio.server.domain.mentoring.entity.MentorSkill;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,12 +1,13 @@
-package com.certifolio.server.Mentoring.controller;
+package com.certifolio.server.domain.mentoring.controller;
 
-import com.certifolio.server.Mentoring.dto.ChatMessageDTO;
-import com.certifolio.server.Mentoring.service.ChatService;
-import com.certifolio.server.User.domain.User;
-import com.certifolio.server.Mentoring.domain.Mentor;
-import com.certifolio.server.Mentoring.repository.MentorRepository;
-import com.certifolio.server.User.repository.UserRepository;
-import com.certifolio.server.auth.util.AuthUtils;
+import com.certifolio.server.domain.mentoring.dto.request.ChatMessageRequestDTO;
+import com.certifolio.server.domain.mentoring.dto.response.ChatMessageResponseDTO;
+import com.certifolio.server.domain.mentoring.service.ChatService;
+import com.certifolio.server.domain.user.entity.User;
+import com.certifolio.server.domain.mentoring.entity.Mentor;
+import com.certifolio.server.domain.mentoring.repository.MentorRepository;
+import com.certifolio.server.domain.user.repository.UserRepository;
+import com.certifolio.server.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 public class ChatController {
 
     private final ChatService chatService;
+    private final UserService userService;
     private final UserRepository userRepository;
     private final MentorRepository mentorRepository;
     private final SimpMessagingTemplate messagingTemplate;
@@ -32,32 +34,26 @@ public class ChatController {
     /**
      * 채팅방 생성 또는 기존 채팅방 조회
      * POST /api/chat/rooms
-     * Body: { "mentorId": 1 }
      */
     @PostMapping("/api/chat/rooms")
     public ResponseEntity<?> getOrCreateRoom(
-            @AuthenticationPrincipal Object principal,
-            @RequestBody ChatMessageDTO.CreateRoomRequest request) {
-
-        User user = AuthUtils.resolveUser(principal, userRepository);
-        if (user == null) {
-            return ResponseEntity.status(401).body("인증이 필요합니다.");
-        }
+            @AuthenticationPrincipal Long userId,
+            @RequestBody ChatMessageRequestDTO.CreateRoomRequest request) {
 
         try {
-            Long targetUserId = user.getId();
+            Long targetUserId = userId;
             if (request.userId() != null) {
                 // 멘토가 멘티를 지정하는 경우: 요청자가 해당 멘토의 소유자인지 검증
                 Mentor mentor = mentorRepository.findById(request.mentorId())
                         .orElseThrow(() -> new RuntimeException("멘토를 찾을 수 없습니다."));
-                if (!mentor.getUser().getId().equals(user.getId())) {
+                if (!mentor.getUser().getId().equals(userId)) {
                     return ResponseEntity.status(403).body(
                             java.util.Map.of("success", false, "message", "다른 멘토의 채팅방을 생성할 권한이 없습니다."));
                 }
                 targetUserId = request.userId();
             }
 
-            ChatMessageDTO.ChatRoomResponse room = chatService.getOrCreateChatRoom(
+            ChatMessageResponseDTO.ChatRoomResponse room = chatService.getOrCreateChatRoom(
                     request.mentorId(), targetUserId);
             return ResponseEntity.ok(room);
         } catch (IllegalStateException e) {
@@ -72,14 +68,9 @@ public class ChatController {
      */
     @GetMapping("/api/chat/rooms")
     public ResponseEntity<?> getMyChatRooms(
-            @AuthenticationPrincipal Object principal) {
+            @AuthenticationPrincipal Long userId) {
 
-        User user = AuthUtils.resolveUser(principal, userRepository);
-        if (user == null) {
-            return ResponseEntity.status(401).body("인증이 필요합니다.");
-        }
-
-        ChatMessageDTO.ChatRoomListResponse rooms = chatService.getMyChatRooms(user.getId());
+        ChatMessageResponseDTO.ChatRoomListResponse rooms = chatService.getMyChatRooms(userId);
         return ResponseEntity.ok(rooms);
     }
 
@@ -92,21 +83,19 @@ public class ChatController {
      */
     @MessageMapping("/chat.send/{chatRoomId}")
     public void sendMessage(@DestinationVariable Long chatRoomId,
-            @Payload ChatMessageDTO.SendRequest request) {
+            @Payload ChatMessageRequestDTO.SendRequest request) {
         log.info("WebSocket message received: chatRoomId={}, sender={}", chatRoomId, request.senderSubject());
 
-        // subject에서 User 찾기
+        // subject(provider:providerId)에서 User 찾기
         User sender = resolveUserFromSubject(request.senderSubject());
         if (sender == null) {
             log.warn("Unable to resolve user from subject: {}", request.senderSubject());
             return;
         }
 
-        // 메시지 저장 및 응답 생성
-        ChatMessageDTO.MessageResponse response = chatService.sendMessage(
+        ChatMessageResponseDTO.MessageResponse response = chatService.sendMessage(
                 chatRoomId, sender.getId(), request.content());
 
-        // 해당 채팅방 구독자들에게 브로드캐스트
         messagingTemplate.convertAndSend("/topic/chat." + chatRoomId, response);
     }
 
@@ -116,15 +105,13 @@ public class ChatController {
      */
     @MessageMapping("/chat.join/{chatRoomId}")
     public void joinChat(@DestinationVariable Long chatRoomId,
-            @Payload ChatMessageDTO.SendRequest request) {
+            @Payload ChatMessageRequestDTO.SendRequest request) {
         User user = resolveUserFromSubject(request.senderSubject());
         if (user == null)
             return;
 
-        String userName = user.getName();
-
-        ChatMessageDTO.MessageResponse systemMsg = chatService.sendSystemMessage(
-                chatRoomId, user.getId(), userName + "님이 채팅에 참가했습니다.");
+        ChatMessageResponseDTO.MessageResponse systemMsg = chatService.sendSystemMessage(
+                chatRoomId, user.getId(), user.getName() + "님이 채팅에 참가했습니다.");
 
         messagingTemplate.convertAndSend("/topic/chat." + chatRoomId, systemMsg);
     }
@@ -138,18 +125,12 @@ public class ChatController {
     @PostMapping("/api/chat/rooms/{chatRoomId}/send")
     public ResponseEntity<?> sendMessageRest(
             @PathVariable Long chatRoomId,
-            @AuthenticationPrincipal Object principal,
-            @RequestBody ChatMessageDTO.SendRequest request) {
+            @AuthenticationPrincipal Long userId,
+            @RequestBody ChatMessageRequestDTO.SendRequest request) {
 
-        User user = AuthUtils.resolveUser(principal, userRepository);
-        if (user == null) {
-            return ResponseEntity.status(401).body("인증이 필요합니다.");
-        }
+        ChatMessageResponseDTO.MessageResponse response = chatService.sendMessage(
+                chatRoomId, userId, request.content());
 
-        ChatMessageDTO.MessageResponse response = chatService.sendMessage(
-                chatRoomId, user.getId(), request.content());
-
-        // WebSocket 구독자에게도 브로드캐스트
         messagingTemplate.convertAndSend("/topic/chat." + chatRoomId, response);
 
         return ResponseEntity.ok(response);
@@ -162,12 +143,9 @@ public class ChatController {
     @GetMapping("/api/chat/rooms/{chatRoomId}/messages")
     public ResponseEntity<?> getChatHistory(
             @PathVariable Long chatRoomId,
-            @AuthenticationPrincipal Object principal) {
+            @AuthenticationPrincipal Long userId) {
 
-        User user = AuthUtils.resolveUser(principal, userRepository);
-        Long userId = (user != null) ? user.getId() : null;
-
-        ChatMessageDTO.ChatHistoryResponse history = chatService.getChatHistory(chatRoomId, userId);
+        ChatMessageResponseDTO.ChatHistoryResponse history = chatService.getChatHistory(chatRoomId, userId);
         return ResponseEntity.ok(history);
     }
 
@@ -178,12 +156,9 @@ public class ChatController {
     @GetMapping("/api/chat/rooms/{chatRoomId}/messages/recent")
     public ResponseEntity<?> getRecentMessages(
             @PathVariable Long chatRoomId,
-            @AuthenticationPrincipal Object principal) {
+            @AuthenticationPrincipal Long userId) {
 
-        User user = AuthUtils.resolveUser(principal, userRepository);
-        Long userId = (user != null) ? user.getId() : null;
-
-        ChatMessageDTO.ChatHistoryResponse history = chatService.getRecentMessages(chatRoomId, userId);
+        ChatMessageResponseDTO.ChatHistoryResponse history = chatService.getRecentMessages(chatRoomId, userId);
         return ResponseEntity.ok(history);
     }
 
