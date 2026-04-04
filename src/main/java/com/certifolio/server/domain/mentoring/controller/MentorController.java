@@ -55,12 +55,7 @@ public class MentorController {
             @RequestBody MentorRequestDTO.MentorApplicationRequest request) {
 
         MentorResponseDTO.ApplyMentorResponse response = mentorService.applyMentor(userId, request);
-
-        if (response.success()) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
-        }
+        return ResponseEntity.ok(response);
     }
 
     /**

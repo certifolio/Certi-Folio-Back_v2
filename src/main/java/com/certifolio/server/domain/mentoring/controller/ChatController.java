@@ -7,6 +7,8 @@ import com.certifolio.server.domain.user.entity.User;
 import com.certifolio.server.domain.mentoring.entity.Mentor;
 import com.certifolio.server.domain.mentoring.repository.MentorRepository;
 import com.certifolio.server.domain.user.repository.UserRepository;
+import com.certifolio.server.global.apiPayload.code.GeneralErrorCode;
+import com.certifolio.server.global.apiPayload.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -34,30 +36,24 @@ public class ChatController {
      * POST /api/chat/rooms
      */
     @PostMapping("/api/chat/rooms")
-    public ResponseEntity<?> getOrCreateRoom(
+    public ResponseEntity<ChatMessageResponseDTO.ChatRoomResponse> getOrCreateRoom(
             @AuthenticationPrincipal Long userId,
             @RequestBody ChatMessageRequestDTO.CreateRoomRequest request) {
 
-        try {
-            Long targetUserId = userId;
-            if (request.userId() != null) {
-                // 멘토가 멘티를 지정하는 경우: 요청자가 해당 멘토의 소유자인지 검증
-                Mentor mentor = mentorRepository.findById(request.mentorId())
-                        .orElseThrow(() -> new RuntimeException("멘토를 찾을 수 없습니다."));
-                if (!mentor.getUser().getId().equals(userId)) {
-                    return ResponseEntity.status(403).body(
-                            java.util.Map.of("success", false, "message", "다른 멘토의 채팅방을 생성할 권한이 없습니다."));
-                }
-                targetUserId = request.userId();
+        Long targetUserId = userId;
+        if (request.userId() != null) {
+            // 멘토가 멘티를 지정하는 경우: 요청자가 해당 멘토의 소유자인지 검증
+            Mentor mentor = mentorRepository.findById(request.mentorId())
+                    .orElseThrow(() -> new BusinessException(GeneralErrorCode.MENTOR_NOT_FOUND));
+            if (!mentor.getUser().getId().equals(userId)) {
+                throw new BusinessException(GeneralErrorCode.CHAT_ROOM_CREATION_FORBIDDEN);
             }
-
-            ChatMessageResponseDTO.ChatRoomResponse room = chatService.getOrCreateChatRoom(
-                    request.mentorId(), targetUserId);
-            return ResponseEntity.ok(room);
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(403).body(
-                    java.util.Map.of("success", false, "message", e.getMessage()));
+            targetUserId = request.userId();
         }
+
+        ChatMessageResponseDTO.ChatRoomResponse room = chatService.getOrCreateChatRoom(
+                request.mentorId(), targetUserId);
+        return ResponseEntity.ok(room);
     }
 
     /**

@@ -27,12 +27,7 @@ public class MentoringApplicationController {
             @RequestBody MentoringApplicationRequestDTO.CreateRequest request) {
 
         MentoringApplicationResponseDTO.CreateResponse response = applicationService.createApplication(userId, request);
-
-        if (response.success()) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
-        }
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -69,12 +64,7 @@ public class MentoringApplicationController {
             @PathVariable Long id) {
 
         MentoringApplicationResponseDTO.ActionResponse response = applicationService.approveApplication(userId, id);
-
-        if (response.success()) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
-        }
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -89,11 +79,6 @@ public class MentoringApplicationController {
 
         String reason = request != null ? request.reason() : null;
         MentoringApplicationResponseDTO.ActionResponse response = applicationService.rejectApplication(userId, id, reason);
-
-        if (response.success()) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
-        }
+        return ResponseEntity.ok(response);
     }
 }

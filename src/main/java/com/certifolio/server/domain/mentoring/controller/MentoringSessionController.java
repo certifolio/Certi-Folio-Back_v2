@@ -51,12 +51,7 @@ public class MentoringSessionController {
             @RequestBody MentoringSessionRequestDTO.CreateSessionRequest request) {
 
         MentoringSessionResponseDTO.UpdateSessionResponse response = sessionService.createSession(userId, request);
-
-        if (response.success()) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
-        }
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -69,11 +64,6 @@ public class MentoringSessionController {
             @RequestBody MentoringSessionRequestDTO.UpdateSessionStatusRequest request) {
 
         MentoringSessionResponseDTO.UpdateSessionResponse response = sessionService.updateSessionStatus(sessionId, request);
-
-        if (response.success()) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
-        }
+        return ResponseEntity.ok(response);
     }
 }
