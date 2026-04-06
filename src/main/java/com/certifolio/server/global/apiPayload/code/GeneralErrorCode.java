@@ -83,6 +83,7 @@ public enum GeneralErrorCode implements BaseErrorCode {
 
     // ============ NOTIFICATION (N) ============
     NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "NOTI_001", "해당 알림을 찾을 수 없습니다."),
+    NOTIFICATION_UNAUTHORIZED(HttpStatus.FORBIDDEN, "NOTI_002", "해당 알림에 접근 권한이 없습니다."),
 
 
     ;
