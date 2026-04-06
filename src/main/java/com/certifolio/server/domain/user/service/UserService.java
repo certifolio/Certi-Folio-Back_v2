@@ -30,8 +30,6 @@ public class UserService {
         CareerPreference pref = careerPreferenceRepository.findByUser(user)
                 .orElseGet(() -> CareerPreference.builder()
                         .user(user)
-                        .companyType(companyType)
-                        .jobRole(jobRole)
                         .build());
 
         pref.update(companyType, jobRole);
