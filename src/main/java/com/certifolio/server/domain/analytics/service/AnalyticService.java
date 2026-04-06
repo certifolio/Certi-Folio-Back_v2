@@ -19,6 +19,8 @@ import com.certifolio.server.domain.user.entity.CareerPreference;
 import com.certifolio.server.domain.user.entity.User;
 import com.certifolio.server.domain.user.repository.CareerPreferenceRepository;
 import com.certifolio.server.domain.user.service.UserService;
+import com.certifolio.server.global.apiPayload.code.GeneralErrorCode;
+import com.certifolio.server.global.apiPayload.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +29,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class AnalyticService {
 
     private final UserService userService;
@@ -40,6 +43,21 @@ public class AnalyticService {
     private final ProjectService projectService;
     private final GeminiService geminiService;
 
+    // 최신 분석 결과 조회
+    public AnalyticResponseDTO getLatestAnalytic(Long userId) {
+        Analytic analytic = analyticRepository.findTopByUserIdOrderByCreatedAtDesc(userId)
+                .orElseThrow(() -> new BusinessException(GeneralErrorCode.ANALYTICS_NOT_FOUND));
+        return AnalyticResponseDTO.from(analytic);
+    }
+
+    // 분석 이력 전체 조회
+    public List<AnalyticResponseDTO> getAnalyticHistory(Long userId) {
+        return analyticRepository.findAllByUserIdOrderByCreatedAtDesc(userId).stream()
+                .map(AnalyticResponseDTO::from)
+                .toList();
+    }
+
+    // 포트폴리오 분석 요청
     @Transactional
     public AnalyticResponseDTO analyzePortfolio(Long userId) {
         User user = userService.getUserById(userId);
@@ -57,7 +75,7 @@ public class AnalyticService {
         String prompt = buildPrompt(educations, careers, certificates, projects, activities, algorithm, preference);
         AnalyticResponseDTO result = geminiService.analyze(prompt);
 
-        analyticRepository.save(Analytic.builder()
+        Analytic analytic = analyticRepository.save(Analytic.builder()
                 .user(user)
                 .overallScore(result.overallScore())
                 .categoryScores(result.categoryScores())
@@ -66,7 +84,7 @@ public class AnalyticService {
                 .summary(result.summary())
                 .build());
 
-        return result;
+        return AnalyticResponseDTO.from(analytic);
     }
 
     private String buildPrompt(
