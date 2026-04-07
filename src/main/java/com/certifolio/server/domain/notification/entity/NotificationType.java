@@ -9,4 +9,8 @@ public enum NotificationType {
     public String toFrontendValue() {
         return this.name().toLowerCase();
     }
+
+    public static NotificationType fromString(String value) {
+        return NotificationType.valueOf(value.toUpperCase());
+    }
 }
