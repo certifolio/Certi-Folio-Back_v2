@@ -1,6 +1,7 @@
 package com.certifolio.server.domain.community.service;
 
-import com.certifolio.server.domain.community.dto.request.CommentRequestDTO;
+import com.certifolio.server.domain.community.dto.request.CommentCreateRequestDTO;
+import com.certifolio.server.domain.community.dto.request.CommentModifyRequestDTO;
 import com.certifolio.server.domain.community.entity.Comment;
 import com.certifolio.server.domain.community.entity.Post;
 import com.certifolio.server.domain.community.repository.CommentRepository;
@@ -23,7 +24,7 @@ public class CommentService {
 
     // 댓글 작성
     @Transactional
-    public Long createComment(Long userId, CommentRequestDTO request) {
+    public Long createComment(Long userId, CommentCreateRequestDTO request) {
         User user = userService.getUserById(userId);
         Post post = postRepository.findById(request.postId())
                 .orElseThrow(() -> new BusinessException(GeneralErrorCode.POST_NOT_FOUND));
@@ -39,7 +40,7 @@ public class CommentService {
 
     // 댓글 수정
     @Transactional
-    public void editComment(Long userId, Long commentId, CommentRequestDTO request) {
+    public void modifyComment(Long userId, Long commentId, CommentModifyRequestDTO request) {
         Comment comment = getCommentWithOwnerCheck(userId, commentId);
         comment.update(request.content());
     }

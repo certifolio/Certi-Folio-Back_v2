@@ -65,7 +65,7 @@ public class PostService {
 
     // 글 수정 - 수정 후 프론트에서 상세 조회 API 재호출 상정
     @Transactional
-    public void editPost(Long userId, Long postId, PostRequestDTO request) {
+    public void modifyPost(Long userId, Long postId, PostRequestDTO request) {
         Post post = getPostWithOwnerCheck(userId, postId);
         post.update(request.title(), request.content(), request.type());
     }
