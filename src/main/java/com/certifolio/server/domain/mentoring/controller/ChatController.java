@@ -3,15 +3,9 @@ package com.certifolio.server.domain.mentoring.controller;
 import com.certifolio.server.domain.mentoring.dto.request.ChatMessageRequestDTO;
 import com.certifolio.server.domain.mentoring.dto.response.ChatMessageResponseDTO;
 import com.certifolio.server.domain.mentoring.service.ChatService;
-import com.certifolio.server.domain.user.entity.User;
-import com.certifolio.server.domain.mentoring.entity.Mentor;
-import com.certifolio.server.domain.mentoring.repository.MentorRepository;
-import com.certifolio.server.domain.user.repository.UserRepository;
-import com.certifolio.server.global.apiPayload.code.GeneralErrorCode;
-import com.certifolio.server.global.apiPayload.exception.BusinessException;
+import com.certifolio.server.global.apiPayload.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -19,14 +13,14 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
+
 @RestController
 @RequiredArgsConstructor
 @Slf4j
 public class ChatController {
 
     private final ChatService chatService;
-    private final UserRepository userRepository;
-    private final MentorRepository mentorRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
     // ===== REST API (채팅방 관리) =====
@@ -36,24 +30,13 @@ public class ChatController {
      * POST /api/chat/rooms
      */
     @PostMapping("/api/chat/rooms")
-    public ResponseEntity<ChatMessageResponseDTO.ChatRoomResponse> getOrCreateRoom(
+    public ApiResponse<ChatMessageResponseDTO.ChatRoomResponse> getOrCreateChattingRoom(
             @AuthenticationPrincipal Long userId,
             @RequestBody ChatMessageRequestDTO.CreateRoomRequest request) {
 
-        Long targetUserId = userId;
-        if (request.userId() != null) {
-            // 멘토가 멘티를 지정하는 경우: 요청자가 해당 멘토의 소유자인지 검증
-            Mentor mentor = mentorRepository.findById(request.mentorId())
-                    .orElseThrow(() -> new BusinessException(GeneralErrorCode.MENTOR_NOT_FOUND));
-            if (!mentor.getUser().getId().equals(userId)) {
-                throw new BusinessException(GeneralErrorCode.CHAT_ROOM_CREATION_FORBIDDEN);
-            }
-            targetUserId = request.userId();
-        }
-
-        ChatMessageResponseDTO.ChatRoomResponse room = chatService.getOrCreateChatRoom(
-                request.mentorId(), targetUserId);
-        return ResponseEntity.ok(room);
+        ChatMessageResponseDTO.ChatRoomResponse room = chatService.getOrCreateChattingRoom(
+                request.mentorId(), userId);
+        return ApiResponse.onSuccess("채팅방 조회 또는 생성 성공", room);
     }
 
     /**
@@ -61,11 +44,11 @@ public class ChatController {
      * GET /api/chat/rooms
      */
     @GetMapping("/api/chat/rooms")
-    public ResponseEntity<?> getMyChatRooms(
+    public ApiResponse<ChatMessageResponseDTO.ChatRoomListResponse> getMyChatRooms(
             @AuthenticationPrincipal Long userId) {
 
         ChatMessageResponseDTO.ChatRoomListResponse rooms = chatService.getMyChatRooms(userId);
-        return ResponseEntity.ok(rooms);
+        return ApiResponse.onSuccess("내 채팅방 목록 조회 성공", rooms);
     }
 
     // ===== WebSocket 메시지 처리 =====
@@ -77,18 +60,13 @@ public class ChatController {
      */
     @MessageMapping("/chat.send/{chatRoomId}")
     public void sendMessage(@DestinationVariable Long chatRoomId,
-            @Payload ChatMessageRequestDTO.SendRequest request) {
-        log.info("WebSocket message received: chatRoomId={}, sender={}", chatRoomId, request.senderSubject());
-
-        // subject(provider:providerId)에서 User 찾기
-        User sender = resolveUserFromSubject(request.senderSubject());
-        if (sender == null) {
-            log.warn("Unable to resolve user from subject: {}", request.senderSubject());
-            return;
-        }
+            @Payload ChatMessageRequestDTO.SendRequest request,
+            Principal principal) {
+        Long userId = Long.parseLong(principal.getName());
+        log.info("WebSocket message received: chatRoomId={}, userId={}", chatRoomId, userId);
 
         ChatMessageResponseDTO.MessageResponse response = chatService.sendMessage(
-                chatRoomId, sender.getId(), request.content());
+                chatRoomId, userId, request.content());
 
         messagingTemplate.convertAndSend("/topic/chat." + chatRoomId, response);
     }
@@ -99,13 +77,11 @@ public class ChatController {
      */
     @MessageMapping("/chat.join/{chatRoomId}")
     public void joinChat(@DestinationVariable Long chatRoomId,
-            @Payload ChatMessageRequestDTO.SendRequest request) {
-        User user = resolveUserFromSubject(request.senderSubject());
-        if (user == null)
-            return;
+            Principal principal) {
+        Long userId = Long.parseLong(principal.getName());
 
         ChatMessageResponseDTO.MessageResponse systemMsg = chatService.sendSystemMessage(
-                chatRoomId, user.getId(), user.getName() + "님이 채팅에 참가했습니다.");
+                chatRoomId, userId);
 
         messagingTemplate.convertAndSend("/topic/chat." + chatRoomId, systemMsg);
     }
@@ -117,7 +93,7 @@ public class ChatController {
      * POST /api/chat/rooms/{chatRoomId}/send
      */
     @PostMapping("/api/chat/rooms/{chatRoomId}/send")
-    public ResponseEntity<?> sendMessageRest(
+    public ApiResponse<ChatMessageResponseDTO.MessageResponse> sendMessageRest(
             @PathVariable Long chatRoomId,
             @AuthenticationPrincipal Long userId,
             @RequestBody ChatMessageRequestDTO.SendRequest request) {
@@ -127,44 +103,23 @@ public class ChatController {
 
         messagingTemplate.convertAndSend("/topic/chat." + chatRoomId, response);
 
-        return ResponseEntity.ok(response);
+        return ApiResponse.onSuccess("메시지 전송 성공", response);
     }
 
     /**
-     * 채팅 기록 전체 조회 (시간순 정렬)
-     * GET /api/chat/rooms/{chatRoomId}/messages
+     * 커서 기반 메시지 조회
+     * GET /api/chat/rooms/{chatRoomId}/messages?cursor={lastMessageId}&size={size}
+     * cursor 없으면 최신 메시지부터, 있으면 해당 id 이전 메시지 조회
      */
     @GetMapping("/api/chat/rooms/{chatRoomId}/messages")
-    public ResponseEntity<?> getChatHistory(
+    public ApiResponse<ChatMessageResponseDTO.ChatHistoryResponse> getMessages(
             @PathVariable Long chatRoomId,
-            @AuthenticationPrincipal Long userId) {
+            @AuthenticationPrincipal Long userId,
+            @RequestParam(required = false) Long cursor,
+            @RequestParam(defaultValue = "50") int size) {
 
-        ChatMessageResponseDTO.ChatHistoryResponse history = chatService.getChatHistory(chatRoomId, userId);
-        return ResponseEntity.ok(history);
+        ChatMessageResponseDTO.ChatHistoryResponse history = chatService.getMessages(chatRoomId, userId, cursor, size);
+        return ApiResponse.onSuccess("메시지 조회 성공", history);
     }
 
-    /**
-     * 최근 메시지 조회 (최대 50개)
-     * GET /api/chat/rooms/{chatRoomId}/messages/recent
-     */
-    @GetMapping("/api/chat/rooms/{chatRoomId}/messages/recent")
-    public ResponseEntity<?> getRecentMessages(
-            @PathVariable Long chatRoomId,
-            @AuthenticationPrincipal Long userId) {
-
-        ChatMessageResponseDTO.ChatHistoryResponse history = chatService.getRecentMessages(chatRoomId, userId);
-        return ResponseEntity.ok(history);
-    }
-
-    // ===== Helper =====
-
-    /**
-     * JWT subject (provider:providerId) 로 User 조회
-     */
-    private User resolveUserFromSubject(String subject) {
-        if (subject == null || !subject.contains(":"))
-            return null;
-        String[] parts = subject.split(":", 2);
-        return userRepository.findByProviderAndProviderId(parts[0], parts[1]).orElse(null);
-    }
 }
