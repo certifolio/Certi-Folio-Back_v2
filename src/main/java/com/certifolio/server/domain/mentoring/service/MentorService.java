@@ -35,7 +35,7 @@ public class MentorService {
     /**
      * 멘토 검색/목록 조회
      */
-    public MentorResponseDTO.MentorsResponse searchMentors(List<String> skills) {
+    public MentorResponseDTO.MentorsResponse searchMentorBySkills(List<String> skills) {
         List<Mentor> mentors;
 
         if (skills != null && !skills.isEmpty()) {
@@ -119,14 +119,8 @@ public class MentorService {
         Mentor mentor = mentorRepository.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException(GeneralErrorCode.MENTOR_NOT_FOUND));
 
-        mentor.setTitle(request.title());
-        mentor.setCompany(request.company());
-        mentor.setExperience(request.experience());
-        mentor.setBio(request.bio());
-        mentor.setPreferredFormat(request.preferredFormat());
-
-        mentor.getSkills().clear();
-        mentor.getAvailabilities().clear();
+        mentor.updateProfile(request.title(), request.company(), request.experience(),
+                request.bio(), request.preferredFormat());
 
         saveSkillsAndAvailabilities(mentor, request);
         mentorRepository.save(mentor);
@@ -162,10 +156,20 @@ public class MentorService {
             for (String timeSlot : request.availability()) {
                 MentorAvailability availability = MentorAvailability.builder()
                         .mentor(mentor)
-                        .timeSlot(timeSlot)
+                        .timeSlot(parseTimeSlot(timeSlot))
                         .build();
                 mentor.addAvailability(availability);
             }
+        }
+    }
+    /**
+     * TimeSlot 예외처리
+     */
+    private TimeSlot parseTimeSlot(String value) {
+        try {
+            return TimeSlot.valueOf(value);
+        } catch (IllegalArgumentException e) {
+            throw new BusinessException(GeneralErrorCode.INVALID_TIME_SLOT);
         }
     }
 }
