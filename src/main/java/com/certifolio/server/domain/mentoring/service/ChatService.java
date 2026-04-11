@@ -3,19 +3,22 @@ package com.certifolio.server.domain.mentoring.service;
 import com.certifolio.server.domain.mentoring.entity.ChatMessage;
 import com.certifolio.server.domain.mentoring.entity.ChatRoom;
 import com.certifolio.server.domain.mentoring.entity.Mentor;
+import com.certifolio.server.domain.mentoring.entity.MessageType;
 import com.certifolio.server.domain.mentoring.dto.response.ChatMessageResponseDTO;
 import com.certifolio.server.domain.mentoring.repository.ChatMessageRepository;
 import com.certifolio.server.domain.mentoring.repository.ChatRoomRepository;
 import com.certifolio.server.domain.mentoring.repository.MentorRepository;
 import com.certifolio.server.domain.mentoring.repository.MentoringApplicationRepository;
 import com.certifolio.server.domain.user.entity.User;
-import com.certifolio.server.domain.user.repository.UserRepository;
+import com.certifolio.server.domain.user.service.UserService;
 import com.certifolio.server.global.apiPayload.code.GeneralErrorCode;
 import com.certifolio.server.global.apiPayload.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 
 import java.util.Collections;
 import java.util.List;
@@ -24,29 +27,26 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class ChatService {
 
         private final ChatMessageRepository chatMessageRepository;
         private final ChatRoomRepository chatRoomRepository;
         private final MentorRepository mentorRepository;
         private final MentoringApplicationRepository mentoringApplicationRepository;
-        private final UserRepository userRepository;
+        private final UserService userService;
 
         /**
          * 채팅방 생성 또는 기존 채팅방 반환
          */
         @Transactional
-        public ChatMessageResponseDTO.ChatRoomResponse getOrCreateChatRoom(Long mentorId, Long userId) {
+        public ChatMessageResponseDTO.ChatRoomResponse getOrCreateChattingRoom(Long mentorId, Long userId) {
+                Mentor mentor = mentorRepository.findById(mentorId)
+                                .orElseThrow(() -> new BusinessException(GeneralErrorCode.MENTOR_NOT_FOUND));
+
                 return chatRoomRepository.findByMentorIdAndUserId(mentorId, userId)
                                 .map(this::toChatRoomResponse)
                                 .orElseGet(() -> {
-                                        Mentor mentor = mentorRepository.findById(mentorId)
-                                                        .orElseThrow(() -> new BusinessException(GeneralErrorCode.MENTOR_NOT_FOUND));
-
-                                        if (mentor.getUser().getId().equals(userId)) {
-                                                throw new BusinessException(GeneralErrorCode.SELF_CHAT_NOT_ALLOWED);
-                                        }
-
                                         boolean hasApprovedApplication = mentoringApplicationRepository
                                                         .existsApprovedApplication(userId, mentorId);
 
@@ -54,8 +54,7 @@ public class ChatService {
                                                 throw new BusinessException(GeneralErrorCode.MENTORING_NOT_APPROVED);
                                         }
 
-                                        User user = userRepository.findById(userId)
-                                                        .orElseThrow(() -> new BusinessException(GeneralErrorCode.USER_NOT_FOUND));
+                                        User user = userService.getUserById(userId);
 
                                         ChatRoom room = ChatRoom.builder()
                                                         .mentor(mentor)
@@ -72,8 +71,8 @@ public class ChatService {
         /**
          * 내 채팅방 목록 조회
          */
-        @Transactional(readOnly = true)
         public ChatMessageResponseDTO.ChatRoomListResponse getMyChatRooms(Long userId) {
+                log.info("채팅방 목록 조회: userId={}", userId);
                 List<ChatRoom> rooms = chatRoomRepository.findMyRooms(userId);
 
                 List<ChatMessageResponseDTO.ChatRoomResponse> roomResponses = rooms.stream()
@@ -99,20 +98,20 @@ public class ChatService {
                         throw new BusinessException(GeneralErrorCode.CHAT_ROOM_ACCESS_DENIED);
                 }
 
-                User sender = userRepository.findById(senderId)
-                                .orElseThrow(() -> new BusinessException(GeneralErrorCode.USER_NOT_FOUND));
+                User sender = room.getUser().getId().equals(senderId)
+                                ? room.getUser()
+                                : room.getMentor().getUser();
 
                 ChatMessage message = ChatMessage.builder()
                                 .chatRoom(room)
                                 .sender(sender)
                                 .content(content)
-                                .type(ChatMessage.MessageType.TEXT)
+                                .type(MessageType.TEXT)
                                 .build();
 
                 ChatMessage saved = chatMessageRepository.save(message);
 
                 room.updateLastMessageAt();
-                chatRoomRepository.save(room);
 
                 log.info("Chat message saved: chatRoomId={}, senderId={}, messageId={}", chatRoomId, senderId, saved.getId());
 
@@ -120,21 +119,27 @@ public class ChatService {
         }
 
         /**
-         * 시스템 메시지 저장
+         * 채팅방 입장 시스템 메시지 저장
          */
         @Transactional
-        public ChatMessageResponseDTO.MessageResponse sendSystemMessage(Long chatRoomId, Long senderId, String content) {
+        public ChatMessageResponseDTO.MessageResponse sendSystemMessage(Long chatRoomId, Long senderId) {
+                log.info("시스템 메시지 전송: chatRoomId={}, senderId={}", chatRoomId, senderId);
                 ChatRoom room = chatRoomRepository.findById(chatRoomId)
                                 .orElseThrow(() -> new BusinessException(GeneralErrorCode.CHAT_ROOM_NOT_FOUND));
 
-                User sender = userRepository.findById(senderId)
-                                .orElseThrow(() -> new BusinessException(GeneralErrorCode.USER_NOT_FOUND));
+                if (!isRoomParticipant(room, senderId)) {
+                        throw new BusinessException(GeneralErrorCode.CHAT_ROOM_ACCESS_DENIED);
+                }
+
+                User sender = room.getUser().getId().equals(senderId)
+                                ? room.getUser()
+                                : room.getMentor().getUser();
 
                 ChatMessage message = ChatMessage.builder()
                                 .chatRoom(room)
                                 .sender(sender)
-                                .content(content)
-                                .type(ChatMessage.MessageType.SYSTEM)
+                                .content(sender.getName() + "님이 채팅에 참가했습니다.")
+                                .type(MessageType.SYSTEM)
                                 .build();
 
                 ChatMessage saved = chatMessageRepository.save(message);
@@ -142,45 +147,38 @@ public class ChatService {
         }
 
         /**
-         * 채팅 기록 조회 (시간순)
+         * 커서 기반 페이지네이션 메시지 조회
+         * cursor가 null이면 최신 메시지부터, 있으면 해당 id 이전 메시지 조회
          */
-        @Transactional(readOnly = true)
-        public ChatMessageResponseDTO.ChatHistoryResponse getChatHistory(Long chatRoomId, Long currentUserId) {
+        public ChatMessageResponseDTO.ChatHistoryResponse getMessages(Long chatRoomId, Long currentUserId, Long cursor, int size) {
+                log.info("메시지 조회: chatRoomId={}, userId={}, cursor={}, size={}", chatRoomId, currentUserId, cursor, size);
                 validateAndGetRoom(chatRoomId, currentUserId);
 
-                List<ChatMessage> messages = chatMessageRepository.findByChatRoomIdOrderBySentAtAsc(chatRoomId);
+                // size+1개 조회해서 hasNext 판단
+                PageRequest pageable = PageRequest.of(0, size + 1);
+                List<ChatMessage> messages = cursor == null
+                                ? chatMessageRepository.findByChatRoomIdLatest(chatRoomId, pageable)
+                                : chatMessageRepository.findByChatRoomIdBeforeCursor(chatRoomId, cursor, pageable);
+
+                boolean hasNext = messages.size() > size;
+                if (hasNext) {
+                        messages = messages.subList(0, size);
+                }
+
+                Collections.reverse(messages); // 오래된 순으로 정렬
 
                 List<ChatMessageResponseDTO.MessageResponse> messageResponses = messages.stream()
                                 .map(msg -> toResponse(msg, currentUserId))
                                 .collect(Collectors.toList());
 
-                return ChatMessageResponseDTO.ChatHistoryResponse.builder()
-                                .success(true)
-                                .chatRoomId(chatRoomId)
-                                .messages(messageResponses)
-                                .totalCount(messageResponses.size())
-                                .build();
-        }
-
-        /**
-         * 최근 메시지 조회 (최대 50개)
-         */
-        @Transactional(readOnly = true)
-        public ChatMessageResponseDTO.ChatHistoryResponse getRecentMessages(Long chatRoomId, Long currentUserId) {
-                validateAndGetRoom(chatRoomId, currentUserId);
-
-                List<ChatMessage> messages = chatMessageRepository.findTop50ByChatRoomIdOrderBySentAtDesc(chatRoomId);
-                Collections.reverse(messages);
-
-                List<ChatMessageResponseDTO.MessageResponse> messageResponses = messages.stream()
-                                .map(msg -> toResponse(msg, currentUserId))
-                                .collect(Collectors.toList());
+                Long nextCursor = hasNext ? messages.get(0).getId() : null;
 
                 return ChatMessageResponseDTO.ChatHistoryResponse.builder()
-                                .success(true)
                                 .chatRoomId(chatRoomId)
                                 .messages(messageResponses)
-                                .totalCount(messageResponses.size())
+                                .size(messageResponses.size())
+                                .nextCursor(nextCursor)
+                                .hasNext(hasNext)
                                 .build();
         }
 
@@ -194,7 +192,7 @@ public class ChatService {
                                 .senderProfileImage(sender.getPicture())
                                 .content(message.getContent())
                                 .type(message.getType().name())
-                                .sentAt(message.getSentAt())
+                                .sentAt(message.getCreatedAt())
                                 .isMine(currentUserId != null && sender.getId().equals(currentUserId))
                                 .build();
         }
