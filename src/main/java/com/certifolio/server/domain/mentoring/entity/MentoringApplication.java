@@ -1,9 +1,9 @@
 package com.certifolio.server.domain.mentoring.entity;
 
 import com.certifolio.server.domain.user.entity.User;
+import com.certifolio.server.global.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDateTime;
 
 /**
  * 멘토링 신청 엔티티
@@ -11,11 +11,10 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "mentoring_applications")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MentoringApplication {
+public class MentoringApplication extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,23 +41,15 @@ public class MentoringApplication {
 
     private String rejectReason; // 거절 사유
 
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
-
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+    public void approve() {
+        this.status = ApplicationStatus.APPROVED;
     }
 
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+    public void reject(String reason) {
+        this.status = ApplicationStatus.REJECTED;
+        this.rejectReason = reason;
     }
 
-    // Helper methods
     public String getMenteeName() {
         return mentee != null ? mentee.getName() : "Unknown";
     }
