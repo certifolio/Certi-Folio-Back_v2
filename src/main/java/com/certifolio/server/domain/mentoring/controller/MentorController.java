@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
@@ -25,11 +26,11 @@ public class MentorController {
      * GET /api/mentors?skills=React,Node.js
      */
     @GetMapping
-    public ResponseEntity<MentorResponseDTO.MentorsResponse> searchMentors(
+    public ResponseEntity<MentorResponseDTO.MentorsResponse> searchMentorBySkills(
             @RequestParam(required = false) String skills) {
 
         List<String> skillList = skills != null ? Arrays.asList(skills.split(",")) : null;
-        MentorResponseDTO.MentorsResponse response = mentorService.searchMentors(skillList);
+        MentorResponseDTO.MentorsResponse response = mentorService.searchMentorBySkills(skillList);
         return ResponseEntity.ok(response);
     }
 
@@ -52,7 +53,7 @@ public class MentorController {
     @PostMapping("/apply")
     public ResponseEntity<MentorResponseDTO.ApplyMentorResponse> applyMentor(
             @AuthenticationPrincipal Long userId,
-            @RequestBody MentorRequestDTO.MentorApplicationRequest request) {
+            @Validated @RequestBody MentorRequestDTO.MentorApplicationRequest request) {
 
         MentorResponseDTO.ApplyMentorResponse response = mentorService.applyMentor(userId, request);
         return ResponseEntity.ok(response);
@@ -77,7 +78,7 @@ public class MentorController {
     @PutMapping("/me")
     public ResponseEntity<MentorResponseDTO.ApplyMentorResponse> updateMyMentorProfile(
             @AuthenticationPrincipal Long userId,
-            @RequestBody MentorRequestDTO.MentorApplicationRequest request) {
+            @Validated @RequestBody MentorRequestDTO.MentorApplicationRequest request) {
 
         MentorResponseDTO.ApplyMentorResponse response = mentorService.updateMentorProfile(userId, request);
         return ResponseEntity.ok(response);
