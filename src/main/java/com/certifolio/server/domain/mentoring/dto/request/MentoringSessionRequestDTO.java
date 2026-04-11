@@ -1,13 +1,16 @@
 package com.certifolio.server.domain.mentoring.dto.request;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 public class MentoringSessionRequestDTO {
 
     public record CreateSessionRequest(
-            Long mentorId,
-            String topic
+            @NotNull Long mentorId,
+            @NotBlank String topic
     ) {}
 
     public record UpdateSessionStatusRequest(
-            String status
+            @NotBlank String status
     ) {}
 }
