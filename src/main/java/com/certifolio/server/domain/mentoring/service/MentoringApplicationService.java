@@ -77,14 +77,8 @@ public class MentoringApplicationService {
          * 받은 신청 목록 조회 (멘토용)
          */
         public MentoringApplicationResponseDTO.ApplicationsResponse getReceivedApplications(Long userId) {
-                Mentor mentor = mentorRepository.findByUserId(userId).orElse(null);
-
-                if (mentor == null) {
-                        return MentoringApplicationResponseDTO.ApplicationsResponse.builder()
-                                        .applications(List.of())
-                                        .total(0)
-                                        .build();
-                }
+                Mentor mentor = mentorRepository.findByUserId(userId)
+                                .orElseThrow(() -> new BusinessException(GeneralErrorCode.MENTOR_NOT_FOUND));
 
                 List<MentoringApplication> applications = applicationRepository.findByMentorId(mentor.getId());
 
@@ -133,7 +127,7 @@ public class MentoringApplicationService {
                         throw new BusinessException(GeneralErrorCode.MENTORING_ALREADY_PROCESSED);
                 }
 
-                application.setStatus(ApplicationStatus.APPROVED);
+                application.approve();
                 applicationRepository.save(application);
 
                 MentoringSession session = MentoringSession.builder()
@@ -176,8 +170,7 @@ public class MentoringApplicationService {
                         throw new BusinessException(GeneralErrorCode.MENTORING_ALREADY_PROCESSED);
                 }
 
-                application.setStatus(ApplicationStatus.REJECTED);
-                application.setRejectReason(reason);
+                application.reject(reason);
                 applicationRepository.save(application);
 
                 log.info("멘토링 신청 거절: applicationId={}", applicationId);
