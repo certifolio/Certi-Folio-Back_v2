@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -48,7 +49,7 @@ public class MentoringSessionController {
     @PostMapping
     public ResponseEntity<MentoringSessionResponseDTO.UpdateSessionResponse> createSession(
             @AuthenticationPrincipal Long userId,
-            @RequestBody MentoringSessionRequestDTO.CreateSessionRequest request) {
+            @Validated @RequestBody MentoringSessionRequestDTO.CreateSessionRequest request) {
 
         MentoringSessionResponseDTO.UpdateSessionResponse response = sessionService.createSession(userId, request);
         return ResponseEntity.ok(response);
@@ -61,7 +62,7 @@ public class MentoringSessionController {
     @PatchMapping("/{sessionId}/status")
     public ResponseEntity<MentoringSessionResponseDTO.UpdateSessionResponse> updateSessionStatus(
             @PathVariable Long sessionId,
-            @RequestBody MentoringSessionRequestDTO.UpdateSessionStatusRequest request) {
+            @Validated @RequestBody MentoringSessionRequestDTO.UpdateSessionStatusRequest request) {
 
         MentoringSessionResponseDTO.UpdateSessionResponse response = sessionService.updateSessionStatus(sessionId, request);
         return ResponseEntity.ok(response);
