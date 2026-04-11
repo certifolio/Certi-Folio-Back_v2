@@ -22,10 +22,11 @@ public class ChatMessageResponseDTO {
 
     @Builder
     public record ChatHistoryResponse(
-            boolean success,
             Long chatRoomId,
             List<MessageResponse> messages,
-            int totalCount
+            int size,
+            Long nextCursor,
+            boolean hasNext
     ) {}
 
     @Builder
