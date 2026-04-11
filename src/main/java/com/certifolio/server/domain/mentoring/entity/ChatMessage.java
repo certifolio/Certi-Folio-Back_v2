@@ -1,9 +1,9 @@
 package com.certifolio.server.domain.mentoring.entity;
 
 import com.certifolio.server.domain.user.entity.User;
+import com.certifolio.server.global.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDateTime;
 
 /**
  * 채팅 메시지 엔티티
@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ChatMessage {
+public class ChatMessage extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,19 +36,4 @@ public class ChatMessage {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private MessageType type = MessageType.TEXT;
-
-    @Column(nullable = false)
-    private LocalDateTime sentAt;
-
-    @PrePersist
-    protected void onCreate() {
-        if (sentAt == null) {
-            sentAt = LocalDateTime.now();
-        }
-    }
-
-    public enum MessageType {
-        TEXT,
-        SYSTEM
-    }
 }
