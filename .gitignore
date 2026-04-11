@@ -40,5 +40,5 @@ out/
 *-design-review.md
 
 ### Sensitive config ###
-src/main/resources/application-secret.yml
+src/main/resources/application-secret.yaml
 src/main/resources/application-local.yml
