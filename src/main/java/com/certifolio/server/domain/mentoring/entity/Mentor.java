@@ -1,9 +1,9 @@
 package com.certifolio.server.domain.mentoring.entity;
 
 import com.certifolio.server.domain.user.entity.User;
+import com.certifolio.server.global.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,11 +13,10 @@ import java.util.List;
 @Entity
 @Table(name = "mentors")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Mentor {
+public class Mentor extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,7 +38,9 @@ public class Mentor {
     private String bio; // 자기소개
 
     @Builder.Default
-    private String preferredFormat = "both"; // 선호 형식 (online/offline/both)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PreferredFormat preferredFormat = PreferredFormat.BOTH;
 
     @Builder.Default
     @Enumerated(EnumType.STRING)
@@ -54,23 +55,17 @@ public class Mentor {
     @Builder.Default
     private List<MentorAvailability> availabilities = new ArrayList<>();
 
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
-
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-
     // Helper methods
+    public void updateProfile(String title, String company, String experience, String bio, PreferredFormat preferredFormat) {
+        this.title = title;
+        this.company = company;
+        this.experience = experience;
+        this.bio = bio;
+        this.preferredFormat = preferredFormat;
+        this.skills.clear();
+        this.availabilities.clear();
+    }
+
     public void addSkill(MentorSkill skill) {
         skills.add(skill);
         skill.setMentor(this);
