@@ -103,7 +103,7 @@ public class MentoringSessionService {
                         throw new BusinessException(GeneralErrorCode.MENTORING_INVALID_STATUS);
                 }
 
-                session.setStatus(newStatus);
+                session.updateStatus(newStatus);
                 sessionRepository.save(session);
 
                 log.info("세션 상태 업데이트: sessionId={}, newStatus={}", sessionId, newStatus);
