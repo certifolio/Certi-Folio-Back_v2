@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -24,7 +25,7 @@ public class MentoringApplicationController {
     @PostMapping
     public ResponseEntity<MentoringApplicationResponseDTO.CreateResponse> createApplication(
             @AuthenticationPrincipal Long userId,
-            @RequestBody MentoringApplicationRequestDTO.CreateRequest request) {
+            @Validated @RequestBody MentoringApplicationRequestDTO.CreateRequest request) {
 
         MentoringApplicationResponseDTO.CreateResponse response = applicationService.createApplication(userId, request);
         return ResponseEntity.ok(response);
@@ -75,10 +76,9 @@ public class MentoringApplicationController {
     public ResponseEntity<MentoringApplicationResponseDTO.ActionResponse> rejectApplication(
             @AuthenticationPrincipal Long userId,
             @PathVariable Long id,
-            @RequestBody(required = false) MentoringApplicationRequestDTO.RejectRequest request) {
+            @Validated @RequestBody MentoringApplicationRequestDTO.RejectRequest request) {
 
-        String reason = request != null ? request.reason() : null;
-        MentoringApplicationResponseDTO.ActionResponse response = applicationService.rejectApplication(userId, id, reason);
+        MentoringApplicationResponseDTO.ActionResponse response = applicationService.rejectApplication(userId, id, request.reason());
         return ResponseEntity.ok(response);
     }
 }
