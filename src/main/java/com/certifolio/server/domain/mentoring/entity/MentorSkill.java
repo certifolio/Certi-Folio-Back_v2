@@ -9,7 +9,6 @@ import lombok.*;
 @Entity
 @Table(name = "mentor_skills")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -27,4 +26,8 @@ public class MentorSkill {
     private String skillName; // 스킬명 (예: "백엔드 개발", "React")
 
     private Integer level; // 숙련도 (1-5)
+
+    public void setMentor(Mentor mentor) {
+        this.mentor = mentor;
+    }
 }
