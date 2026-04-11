@@ -68,7 +68,7 @@ public enum GeneralErrorCode implements BaseErrorCode {
 
     // ============ MENTORING (M) ============
     MENTOR_NOT_FOUND(HttpStatus.NOT_FOUND, "MENTOR_001", "해당 멘토를 찾을 수 없습니다."),
-    SELF_CHAT_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "MENTOR_002", "멘토 본인과는 채팅방을 생성할 수 없습니다."),
+
     MENTORING_NOT_APPROVED(HttpStatus.FORBIDDEN, "MENTOR_003", "승인된 멘토링 관계가 있어야 채팅이 가능합니다."),
     CHAT_ROOM_ACCESS_DENIED(HttpStatus.FORBIDDEN, "MENTOR_004", "해당 채팅방에 참여 권한이 없습니다."),
     CHAT_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "MENTOR_005", "해당 채팅방을 찾을 수 없습니다."),
@@ -80,7 +80,8 @@ public enum GeneralErrorCode implements BaseErrorCode {
     MENTORING_APPLICATION_UNAUTHORIZED(HttpStatus.FORBIDDEN, "MENTOR_011", "본인에게 온 신청만 처리할 수 있습니다."),
     MENTORING_ALREADY_PROCESSED(HttpStatus.CONFLICT, "MENTOR_012", "이미 처리된 신청입니다."),
     MENTORING_INVALID_STATUS(HttpStatus.BAD_REQUEST, "MENTOR_013", "잘못된 세션 상태값입니다."),
-    CHAT_ROOM_CREATION_FORBIDDEN(HttpStatus.FORBIDDEN, "MENTOR_014", "다른 멘토의 채팅방을 생성할 권한이 없습니다."),
+    INVALID_TIME_SLOT(HttpStatus.BAD_REQUEST, "MENTOR_014", "유효하지 않은 시간대 값입니다."),
+
 
     // ============ ANALYTICS (AN) ============
     ANALYTICS_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "ANALYTICS_001", "AI 분석 중 오류가 발생했습니다."),
