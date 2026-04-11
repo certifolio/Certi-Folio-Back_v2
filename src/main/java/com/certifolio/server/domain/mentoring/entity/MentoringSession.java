@@ -1,10 +1,10 @@
 package com.certifolio.server.domain.mentoring.entity;
 
 import com.certifolio.server.domain.user.entity.User;
+import com.certifolio.server.global.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 /**
  * 멘토링 세션 엔티티
@@ -12,11 +12,10 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "mentoring_sessions")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MentoringSession {
+public class MentoringSession extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -40,20 +39,7 @@ public class MentoringSession {
 
     private LocalDate startDate; // 시작일
 
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
-
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+    public void updateStatus(SessionStatus status) {
+        this.status = status;
     }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-
 }
