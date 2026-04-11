@@ -1,6 +1,7 @@
 package com.certifolio.server.domain.mentoring.entity;
 
 import com.certifolio.server.domain.user.entity.User;
+import com.certifolio.server.global.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -17,7 +18,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ChatRoom {
+public class ChatRoom extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,14 +32,10 @@ public class ChatRoom {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
-
     private LocalDateTime lastMessageAt;
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
         lastMessageAt = LocalDateTime.now();
     }
 
