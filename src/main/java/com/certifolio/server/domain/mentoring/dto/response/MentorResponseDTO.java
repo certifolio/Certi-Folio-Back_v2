@@ -79,7 +79,10 @@ public class MentorResponseDTO {
                             .map(s -> new SpecialtyItem(s.getSkillName(), s.getLevel() != null ? s.getLevel() : 3))
                             .collect(Collectors.toList()))
                     .availableSlots(mentor.getAvailabilities().stream()
-                            .map(a -> new TimeSlotItem(a.getDate(), a.getTime(), a.getSlotType()))
+                            .map(a -> new TimeSlotItem(
+                                    a.getDate().toString(),
+                                    a.getTime().toString(),
+                                    a.getSlotType() != null ? a.getSlotType().name() : null))
                             .collect(Collectors.toList()))
                     .build();
         }
