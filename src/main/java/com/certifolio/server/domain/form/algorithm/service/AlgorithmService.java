@@ -25,12 +25,11 @@ public class AlgorithmService {
     private final AlgorithmRepository algorithmRepository;
     private final WebClient webClient;
 
-
-
     // 알고리즘 정보 조회
     public AlgorithmResponseDTO getAlgorithm(Long userId) {
         Algorithm algorithm = algorithmRepository.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException(GeneralErrorCode.ALGORITHM_NOT_FOUND));
+
         return AlgorithmResponseDTO.from(algorithm);
     }
 
