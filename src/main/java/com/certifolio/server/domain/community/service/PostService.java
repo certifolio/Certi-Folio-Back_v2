@@ -49,10 +49,12 @@ public class PostService {
     // 글 상세 조회 - 댓글 목록 포함, 조회수 증가
     @Transactional
     public PostResponseDTO getPost(Long postId) {
+        // 사용자에게 먼저 증가된 값을 보여주기 위해서 먼저 증가.
+        // postId가 존재하지 않아도 밑에서 검증 후 에러 나오고 롤백 진행.
+        postRepository.increaseViewCount(postId);
+
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new BusinessException(GeneralErrorCode.POST_NOT_FOUND));
-
-        postRepository.increaseViewCount(postId);
 
         List<CommentResponseDTO> comments = commentRepository.findByPostWithUser(post)
                 .stream()
