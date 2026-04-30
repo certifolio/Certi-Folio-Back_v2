@@ -36,18 +36,14 @@ public class PostService {
                 .content(request.content())
                 .type(request.type())
                 .build();
+
         return postRepository.save(post).getId();
     }
 
     // 글 목록 조회 - type 필터 (null이면 전체)
     @Transactional(readOnly = true)
     public List<PostListResponseDTO> getPosts(PostType type) {
-        List<Post> posts = (type != null)
-                ? postRepository.findByType(type)
-                : postRepository.findAll();
-        return posts.stream()
-                .map(post -> PostListResponseDTO.from(post, commentRepository.countByPost(post)))
-                .toList();
+        return postRepository.findPostList(type);
     }
 
     // 글 상세 조회 - 댓글 목록 포함, 조회수 증가
@@ -55,8 +51,10 @@ public class PostService {
     public PostResponseDTO getPost(Long postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new BusinessException(GeneralErrorCode.POST_NOT_FOUND));
-        post.increaseViewCount();
-        List<CommentResponseDTO> comments = commentRepository.findByPost(post)
+
+        postRepository.increaseViewCount(postId);
+
+        List<CommentResponseDTO> comments = commentRepository.findByPostWithUser(post)
                 .stream()
                 .map(CommentResponseDTO::from)
                 .toList();
@@ -80,9 +78,11 @@ public class PostService {
     private Post getPostWithOwnerCheck(Long userId, Long postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new BusinessException(GeneralErrorCode.POST_NOT_FOUND));
+
         if (!post.getUser().getId().equals(userId)) {
             throw new BusinessException(GeneralErrorCode.POST_UNAUTHORIZED);
         }
+
         return post;
     }
 }

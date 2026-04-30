@@ -42,6 +42,7 @@ public class CommentService {
     @Transactional
     public void modifyComment(Long userId, Long commentId, CommentModifyRequestDTO request) {
         Comment comment = getCommentWithOwnerCheck(userId, commentId);
+
         comment.update(request.content());
     }
 
@@ -49,15 +50,18 @@ public class CommentService {
     @Transactional
     public void deleteComment(Long userId, Long commentId) {
         Comment comment = getCommentWithOwnerCheck(userId, commentId);
+
         commentRepository.delete(comment);
     }
 
     private Comment getCommentWithOwnerCheck(Long userId, Long commentId) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new BusinessException(GeneralErrorCode.COMMENT_NOT_FOUND));
+
         if (!comment.getUser().getId().equals(userId)) {
             throw new BusinessException(GeneralErrorCode.COMMENT_UNAUTHORIZED);
         }
+
         return comment;
     }
 }
