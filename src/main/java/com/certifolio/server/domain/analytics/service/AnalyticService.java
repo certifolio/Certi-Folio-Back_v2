@@ -48,6 +48,7 @@ public class AnalyticService {
     public AnalyticResponseDTO getLatestAnalytic(Long userId) {
         Analytic analytic = analyticRepository.findTopByUserIdOrderByCreatedAtDesc(userId)
                 .orElseThrow(() -> new BusinessException(GeneralErrorCode.ANALYTICS_NOT_FOUND));
+
         return AnalyticResponseDTO.from(analytic);
     }
 

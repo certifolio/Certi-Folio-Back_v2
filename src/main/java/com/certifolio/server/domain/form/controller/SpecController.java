@@ -2,7 +2,7 @@ package com.certifolio.server.domain.form.controller;
 
 import com.certifolio.server.domain.form.activity.service.ActivityService;
 import com.certifolio.server.domain.form.algorithm.dto.response.AlgorithmResponseDTO;
-import com.certifolio.server.domain.form.algorithm.repository.AlgorithmRepository;
+import com.certifolio.server.domain.form.algorithm.service.AlgorithmService;
 import com.certifolio.server.domain.form.career.service.CareerService;
 import com.certifolio.server.domain.form.certificate.service.CertificateService;
 import com.certifolio.server.domain.form.dto.response.SpecResponseDTO;
@@ -23,8 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class SpecController {
 
     private final UserService userService;
-    private final AlgorithmRepository algorithmRepository;
-
+    private final AlgorithmService algorithmService;
     private final ActivityService activityService;
     private final CareerService careerService;
     private final CertificateService certificateService;
@@ -36,14 +35,10 @@ public class SpecController {
     public ApiResponse<SpecResponseDTO> getAllSpecs(@AuthenticationPrincipal Long userId) {
         UserResponseDTO user = UserResponseDTO.from(userService.getUserById(userId));
 
-        AlgorithmResponseDTO algorithm = algorithmRepository.findByUserId(userId)
-                .map(AlgorithmResponseDTO::from)
-                .orElse(null);
-
         SpecResponseDTO specs = new SpecResponseDTO(
                 user,
                 activityService.getActivities(userId),
-                algorithm,
+                algorithmService.getAlgorithm(userId),
                 careerService.getCareers(userId),
                 certificateService.getCertificates(userId),
                 educationService.getEducations(userId),
