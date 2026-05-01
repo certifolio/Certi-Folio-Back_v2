@@ -40,21 +40,24 @@ public class ChatService {
          * 채팅방 생성 또는 기존 채팅방 반환
          */
         @Transactional
-        public ChatMessageResponseDTO.ChatRoomResponse getOrCreateChattingRoom(Long mentorId, Long userId) {
+        public ChatMessageResponseDTO.ChatRoomResponse getOrCreateChattingRoom(Long mentorId, Long userId, Long menteeUserId) {
                 Mentor mentor = mentorRepository.findById(mentorId)
                                 .orElseThrow(() -> new BusinessException(GeneralErrorCode.MENTOR_NOT_FOUND));
 
-                return chatRoomRepository.findByMentorIdAndUserId(mentorId, userId)
+                boolean requesterIsMentor = mentor.getUser().getId().equals(userId);
+                Long chatUserId = resolveChatUserId(mentor, userId, menteeUserId, requesterIsMentor);
+
+                return chatRoomRepository.findByMentorIdAndUserId(mentorId, chatUserId)
                                 .map(this::toChatRoomResponse)
                                 .orElseGet(() -> {
                                         boolean hasApprovedApplication = mentoringApplicationRepository
-                                                        .existsApprovedApplication(userId, mentorId);
+                                                        .existsApprovedApplicationByMenteeAndMentor(chatUserId, mentorId);
 
                                         if (!hasApprovedApplication) {
                                                 throw new BusinessException(GeneralErrorCode.MENTORING_NOT_APPROVED);
                                         }
 
-                                        User user = userService.getUserById(userId);
+                                        User user = userService.getUserById(chatUserId);
 
                                         ChatRoom room = ChatRoom.builder()
                                                         .mentor(mentor)
@@ -66,6 +69,18 @@ public class ChatService {
 
                                         return toChatRoomResponse(saved);
                                 });
+        }
+
+        private Long resolveChatUserId(Mentor mentor, Long requesterUserId, Long menteeUserId, boolean requesterIsMentor) {
+                if (!requesterIsMentor) {
+                        return requesterUserId;
+                }
+
+                if (menteeUserId == null || menteeUserId.equals(requesterUserId)) {
+                        throw new BusinessException(GeneralErrorCode.MENTORING_NOT_APPROVED);
+                }
+
+                return menteeUserId;
         }
 
         /**
