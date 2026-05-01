@@ -41,4 +41,9 @@ public class UserService {
         return careerPreferenceRepository.findByUser(user)
                 .orElseThrow(() -> new BusinessException(GeneralErrorCode.USER_HAVE_NO_PREFERENCE));
     }
+
+    @Transactional(readOnly = true)
+    public CareerPreference getCareerPreferenceOrNull(User user) {
+        return careerPreferenceRepository.findByUser(user).orElse(null);
+    }
 }
