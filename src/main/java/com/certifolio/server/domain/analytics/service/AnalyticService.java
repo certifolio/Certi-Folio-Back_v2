@@ -21,6 +21,7 @@ import com.certifolio.server.domain.user.repository.CareerPreferenceRepository;
 import com.certifolio.server.domain.user.service.UserService;
 import com.certifolio.server.global.apiPayload.code.GeneralErrorCode;
 import com.certifolio.server.global.apiPayload.exception.BusinessException;
+import com.certifolio.server.global.common.service.GeminiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,7 +43,7 @@ public class AnalyticService {
     private final EducationService educationService;
     private final ProjectService projectService;
     private final GeminiService geminiService;
-    private final PromptBuilder promptBuilder;
+    private final AnalyticPromptBuilder analyticPromptBuilder;
 
     // 최신 분석 결과 조회
     public AnalyticResponseDTO getLatestAnalytic(Long userId) {
@@ -74,7 +75,7 @@ public class AnalyticService {
         List<ProjectResponseDTO> projects = projectService.getProjects(userId);
         CareerPreference preference = careerPreferenceRepository.findByUser(user).orElse(null);
 
-        String prompt = promptBuilder.build(educations, careers, certificates, projects, activities, algorithm, preference);
+        String prompt = analyticPromptBuilder.build(educations, careers, certificates, projects, activities, algorithm, preference);
         AnalyticResponseDTO result = geminiService.analyze(prompt);
 
         Analytic analytic = analyticRepository.save(Analytic.builder()

@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-public class PromptBuilder {
+public class AnalyticPromptBuilder {
 
     public String build(
             List<EducationResponseDTO> educations,

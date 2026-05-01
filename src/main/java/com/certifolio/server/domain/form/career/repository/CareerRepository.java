@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface CareerRepository extends JpaRepository<Career, Long> {
     List<Career> findAllByUserId(Long userId);
+    List<Career> findAllByUserIdOrderByEndDateDesc(Long userId);
 }

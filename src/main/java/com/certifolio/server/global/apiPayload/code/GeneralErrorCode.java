@@ -99,8 +99,17 @@ public enum GeneralErrorCode implements BaseErrorCode {
     POST_NOT_FOUND(HttpStatus.NOT_FOUND, "POST_001", "해당 글을 찾을 수 없습니다."),
     POST_UNAUTHORIZED(HttpStatus.FORBIDDEN, "POST_002", "해당 글에 접근 권한이 없습니다."),
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "COMMENT_001", "해당 댓글을 찾을 수 없습니다."),
-    COMMENT_UNAUTHORIZED(HttpStatus.FORBIDDEN, "COMMENT_002", "해당 댓글에 접근 권한이 없습니다.");
+    COMMENT_UNAUTHORIZED(HttpStatus.FORBIDDEN, "COMMENT_002", "해당 댓글에 접근 권한이 없습니다."),
+
+    // ============ PORTFOLIO (P) ============
+    PORTFOLIO_DRAFT_NOT_FOUND(HttpStatus.NOT_FOUND, "PORTFOLIO_001","포트폴리오 초안을 찾을 수 없습니다."),
+    PORTFOLIO_DRAFT_UNAUTHORIZED(HttpStatus.FORBIDDEN, "PORTFOLIO_002","해당 포트폴리오 초안에 접근 권한이 없습니다."),
+    PORTFOLIO_SPEC_EMPTY(HttpStatus.BAD_REQUEST, "PORTFOLIO_003","포트폴리오를 생성할 스펙 데이터가 없습니다."),
+    PORTFOLIO_AI_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "PORTFOLIO_004","AI 초안 생성 중 오류가 발생했습니다."),
+
+    ;
+
     private final HttpStatus httpStatus;
     private final String code;
     private final String message;
-}
+    }
