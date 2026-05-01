@@ -80,8 +80,9 @@ public class MentorResponseDTO {
                             .collect(Collectors.toList()))
                     .availableSlots(mentor.getAvailabilities().stream()
                             .map(a -> new TimeSlotItem(
-                                    a.getDate().toString(),
-                                    a.getTime().toString(),
+                                    a.getDayOfWeek() != null ? a.getDayOfWeek().name() : null,
+                                    a.getStartTime() != null ? a.getStartTime().toString() : null,
+                                    a.getEndTime() != null ? a.getEndTime().toString() : null,
                                     a.getSlotType() != null ? a.getSlotType().name() : null))
                             .collect(Collectors.toList()))
                     .build();
@@ -94,8 +95,9 @@ public class MentorResponseDTO {
     ) {}
 
     public record TimeSlotItem(
-            String date,
-            String time,
+            String dayOfWeek,
+            String startTime,
+            String endTime,
             String type
     ) {}
 
