@@ -32,7 +32,7 @@ public class UserController {
             @Valid @RequestBody UserRequestDTO request
     ) {
         User user = userService.getUserById(userId);
-        userService.saveOnBoarding(user, request.name(), request.birthYear(), request.companyType(), request.jobRole());
+        userService.saveOnBoarding(user, request.name(), request.companyType(), request.jobRole());
         return ApiResponse.onSuccess("온보딩 정보 저장 성공");
     }
 
@@ -43,7 +43,7 @@ public class UserController {
             @Valid @RequestBody UserRequestDTO request
     ) {
         User user = userService.getUserById(userId);
-        userService.saveOnBoarding(user, request.name(), request.birthYear(), request.companyType(), request.jobRole());
+        userService.saveOnBoarding(user, request.name(), request.companyType(), request.jobRole());
         return ApiResponse.onSuccess("내 정보 수정 성공");
     }
 

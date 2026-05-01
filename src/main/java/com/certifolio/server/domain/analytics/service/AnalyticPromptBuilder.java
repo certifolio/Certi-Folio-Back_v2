@@ -1,7 +1,6 @@
 package com.certifolio.server.domain.analytics.service;
 
 import com.certifolio.server.domain.form.activity.dto.response.ActivityResponseDTO;
-import com.certifolio.server.domain.form.algorithm.dto.response.AlgorithmResponseDTO;
 import com.certifolio.server.domain.form.career.dto.response.CareerResponseDTO;
 import com.certifolio.server.domain.form.certificate.dto.response.CertificateResponseDTO;
 import com.certifolio.server.domain.form.education.dto.response.EducationResponseDTO;
@@ -12,7 +11,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-public class PromptBuilder {
+public class AnalyticPromptBuilder {
 
     public String build(
             List<EducationResponseDTO> educations,
@@ -20,14 +19,13 @@ public class PromptBuilder {
             List<CertificateResponseDTO> certificates,
             List<ProjectResponseDTO> projects,
             List<ActivityResponseDTO> activities,
-            AlgorithmResponseDTO algorithm,
             CareerPreference preference) {
 
         StringBuilder sb = new StringBuilder();
         buildRoleSection(sb);
         buildPreferenceSection(sb, preference);
         buildPrincipleSection(sb);
-        buildPortfolioSection(sb, educations, careers, certificates, projects, activities, algorithm);
+        buildPortfolioSection(sb, educations, careers, certificates, projects, activities);
         buildRubricSection(sb);
         buildResponseGuideSection(sb);
         return sb.toString();
@@ -57,7 +55,7 @@ public class PromptBuilder {
     private void buildPrincipleSection(StringBuilder sb) {
         sb.append("[평가 원칙]\n")
                 .append("1. 한국 IT 기업 신입 채용 기준으로 평가하되, 위 희망 진로를 최우선으로 반영하세요.\n")
-                .append("2. 신입/주니어 특성을 반영하세요. 경력이 없어도 프로젝트, 코딩역량 등으로 충분히 높은 점수를 받을 수 있습니다.\n")
+                .append("2. 신입/주니어 특성을 반영하세요. 경력이 없어도 프로젝트, 전공 역량, 자격증/어학 등으로 충분히 높은 점수를 받을 수 있습니다.\n")
                 .append("3. 데이터가 없는 항목은 '미입력'으로 간주하고, 해당 항목만 낮게 평가하되 전체 평가에 과도한 패널티를 주지 마세요.\n")
                 .append("4. 양보다 질을 중시하되, 일정량 이상의 경험도 함께 고려하세요.\n")
                 .append("5. 각 카테고리를 독립적으로 평가한 뒤 가중 평균으로 전체 점수를 산출하세요.\n\n");
@@ -69,8 +67,7 @@ public class PromptBuilder {
             List<CareerResponseDTO> careers,
             List<CertificateResponseDTO> certificates,
             List<ProjectResponseDTO> projects,
-            List<ActivityResponseDTO> activities,
-            AlgorithmResponseDTO algorithm) {
+            List<ActivityResponseDTO> activities) {
 
         sb.append("[포트폴리오 데이터]\n\n");
         buildEducation(sb, educations);
@@ -78,7 +75,7 @@ public class PromptBuilder {
         buildCertificates(sb, certificates);
         buildProjects(sb, projects);
         buildActivities(sb, activities);
-        buildAlgorithm(sb, algorithm);
+        buildLanguages(sb, certificates);
     }
 
     private void buildEducation(StringBuilder sb, List<EducationResponseDTO> educations) {
@@ -119,12 +116,16 @@ public class PromptBuilder {
     }
 
     private void buildCertificates(StringBuilder sb, List<CertificateResponseDTO> certificates) {
-        sb.append(String.format("\n## 자격증 (%d건)\n", certificates.size()));
-        if (certificates.isEmpty()) {
+        List<CertificateResponseDTO> certificateOnly = certificates.stream()
+                .filter(cert -> !isLanguageCertificate(cert))
+                .toList();
+
+        sb.append(String.format("\n## 자격증 (%d건)\n", certificateOnly.size()));
+        if (certificateOnly.isEmpty()) {
             sb.append("- 입력된 자격증 없음\n");
         } else {
-            for (int i = 0; i < certificates.size(); i++) {
-                CertificateResponseDTO cert = certificates.get(i);
+            for (int i = 0; i < certificateOnly.size(); i++) {
+                CertificateResponseDTO cert = certificateOnly.get(i);
                 sb.append(String.format("%d. %s | 종류: %s | 발급기관: %s | 취득일: %s",
                         i + 1,
                         nvl(cert.name()),
@@ -190,15 +191,27 @@ public class PromptBuilder {
         }
     }
 
-    private void buildAlgorithm(StringBuilder sb, AlgorithmResponseDTO algorithm) {
-        sb.append("\n## 코딩테스트 역량 (BOJ/solved.ac)\n");
-        if (algorithm != null) {
-            sb.append(String.format("- 핸들: %s\n", nvl(algorithm.bojHandle())));
-            sb.append(String.format("- 티어: %s\n", tierName(algorithm.tier())));
-            sb.append(String.format("- 해결 문제 수: %d\n", nullSafe(algorithm.solvedCount())));
-            sb.append(String.format("- 레이팅: %d\n", nullSafe(algorithm.rating())));
+    private void buildLanguages(StringBuilder sb, List<CertificateResponseDTO> certificates) {
+        List<CertificateResponseDTO> languages = certificates.stream()
+                .filter(this::isLanguageCertificate)
+                .toList();
+
+        sb.append(String.format("\n## 어학 (%d건)\n", languages.size()));
+        if (languages.isEmpty()) {
+            sb.append("- 입력된 어학 정보 없음\n");
         } else {
-            sb.append("- 입력된 코딩테스트 정보 없음\n");
+            for (int i = 0; i < languages.size(); i++) {
+                CertificateResponseDTO language = languages.get(i);
+                sb.append(String.format("%d. %s | 발급기관: %s | 취득일: %s",
+                        i + 1,
+                        nvl(language.name()),
+                        nvl(language.issuer()),
+                        nvl(language.issueDate())));
+                if (language.score() != null && !language.score().isBlank()) {
+                    sb.append(String.format(" | 점수/등급: %s", language.score()));
+                }
+                sb.append("\n");
+            }
         }
     }
 
@@ -222,13 +235,13 @@ public class PromptBuilder {
         sb.append("0~29: 프로젝트 없음\n");
         sb.append("※ 희망 직무와 관련된 기술스택 사용 시 가산. GitHub/Demo 링크 보유 시 추가 가산.\n\n");
 
-        sb.append("### 3. 자격증/어학 (가중치 15%)\n");
-        sb.append("90~100: 정보처리기사 + TOEIC 900+(또는 OPIc AL/IH) + 추가 전문 자격증(AWS, SQLD 등)\n");
-        sb.append("70~89: 정보처리기사 + TOEIC 800+, 또는 전문 클라우드/DB 자격증 보유\n");
-        sb.append("50~69: TOEIC 700~799 또는 기사급 자격증 1개\n");
-        sb.append("30~49: TOEIC 600~699 또는 산업기사/기능사급\n");
+        sb.append("### 3. 자격증 (가중치 15%)\n");
+        sb.append("90~100: 정보처리기사 + 희망 직무 관련 전문 자격증 2개 이상(AWS, SQLD, ADsP 등)\n");
+        sb.append("70~89: 기사급 자격증 또는 희망 직무 관련 전문 자격증 보유\n");
+        sb.append("50~69: 산업기사/기능사급 자격증 또는 기본 IT 자격증 1~2개\n");
+        sb.append("30~49: 희망 직무와 간접적으로 관련된 자격증 보유\n");
         sb.append("10~29: 관련성 낮은 자격증만 보유\n");
-        sb.append("0~9: 자격증/어학 없음\n");
+        sb.append("0~9: 자격증 없음\n");
         sb.append("※ 희망 직무 관련 자격증(예: 백엔드→SQLD, 클라우드→AWS SAA) 보유 시 추가 가산.\n\n");
 
         sb.append("### 4. 학점/전공 (가중치 15%)\n");
@@ -247,19 +260,17 @@ public class PromptBuilder {
         sb.append("10~29: 단순 참여 수준의 활동\n");
         sb.append("0~9: 대외활동 없음\n\n");
 
-        sb.append("### 6. 코딩역량 (가중치 15%)\n");
-        sb.append("solved.ac 티어 기준:\n");
-        sb.append("90~100: Ruby(31+), 해결 1000+, 레이팅 2500+\n");
-        sb.append("80~89: Diamond(26~30), 해결 700+, 레이팅 2000+\n");
-        sb.append("65~79: Platinum(21~25), 해결 500+, 레이팅 1600+\n");
-        sb.append("50~64: Gold(16~20), 해결 300+\n");
-        sb.append("35~49: Silver(11~15), 해결 100+\n");
-        sb.append("15~34: Bronze(6~10)\n");
-        sb.append("0~14: Unrated 또는 미등록\n");
-        sb.append("※ Gold 이상이면 대부분의 기업 코딩테스트를 무난히 통과할 수 있는 수준입니다. Gold를 과소평가하지 마세요.\n\n");
+        sb.append("### 6. 어학 (가중치 15%)\n");
+        sb.append("90~100: TOEIC 900+ 또는 OPIc AL/IH, TOEFL/IELTS 고득점 등 글로벌 협업 가능 수준\n");
+        sb.append("70~89: TOEIC 800~899 또는 OPIc IM3 이상, 직무 문서 독해와 기본 커뮤니케이션 가능\n");
+        sb.append("50~69: TOEIC 700~799 또는 이에 준하는 어학 성적 보유\n");
+        sb.append("30~49: TOEIC 600~699 또는 기초 어학 성적 보유\n");
+        sb.append("10~29: 오래되었거나 직무 활용도가 낮은 어학 이력만 존재\n");
+        sb.append("0~9: 어학 정보 없음\n");
+        sb.append("※ 외국계/글로벌 협업 직무 또는 해외 문서 활용이 많은 직무에서는 어학 점수의 실무 활용 가능성을 더 높게 반영하세요.\n\n");
 
         sb.append("[가중 평균 공식]\n");
-        sb.append("overallScore = 실무경력×0.20 + 프로젝트경험×0.25 + 자격증어학×0.15 + 학점전공×0.15 + 대외활동×0.10 + 코딩역량×0.15\n");
+        sb.append("overallScore = 실무경력×0.20 + 프로젝트경험×0.25 + 자격증×0.15 + 학점전공×0.15 + 대외활동×0.10 + 어학×0.15\n");
         sb.append("(소수점 반올림하여 정수로)\n\n");
     }
 
@@ -276,10 +287,10 @@ public class PromptBuilder {
         sb.append("  \"categoryScores\": {\n");
         sb.append("    \"실무경력\": 정수,\n");
         sb.append("    \"프로젝트경험\": 정수,\n");
-        sb.append("    \"자격증어학\": 정수,\n");
+        sb.append("    \"자격증\": 정수,\n");
         sb.append("    \"학점전공\": 정수,\n");
         sb.append("    \"대외활동\": 정수,\n");
-        sb.append("    \"코딩역량\": 정수\n");
+        sb.append("    \"어학\": 정수\n");
         sb.append("  },\n");
         sb.append("  \"strengths\": [\"구체적 강점1\", \"구체적 강점2\", \"구체적 강점3\"],\n");
         sb.append("  \"improvements\": [\"구체적 보완점1\", \"구체적 보완점2\", \"구체적 보완점3\"],\n");
@@ -291,18 +302,7 @@ public class PromptBuilder {
         return value != null ? value : "-";
     }
 
-    private int nullSafe(Integer value) {
-        return value != null ? value : 0;
-    }
-
-    private String tierName(Integer tier) {
-        if (tier == null) return "미입력";
-        if (tier == 0) return "언레이티드";
-        String[] tierGroups = {"Bronze", "Silver", "Gold", "Platinum", "Diamond", "Ruby"};
-        String[] levels = {"V", "IV", "III", "II", "I"};
-        int groupIndex = (tier - 1) / 5;
-        int levelIndex = (tier - 1) % 5;
-        if (groupIndex >= tierGroups.length) return "Ruby I";
-        return tierGroups[groupIndex] + " " + levels[levelIndex];
+    private boolean isLanguageCertificate(CertificateResponseDTO certificate) {
+        return certificate.type() != null && "language".equalsIgnoreCase(certificate.type());
     }
 }

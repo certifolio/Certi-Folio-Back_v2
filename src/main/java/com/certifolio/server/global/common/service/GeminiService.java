@@ -1,4 +1,4 @@
-package com.certifolio.server.domain.analytics.service;
+package com.certifolio.server.global.common.service;
 
 import com.certifolio.server.domain.analytics.dto.response.AnalyticResponseDTO;
 import com.certifolio.server.global.apiPayload.code.GeneralErrorCode;
@@ -30,6 +30,10 @@ public class GeminiService {
     private final ObjectMapper objectMapper;
 
     public AnalyticResponseDTO analyze(String prompt) {
+        return generate(prompt, AnalyticResponseDTO.class);
+    }
+
+    public <T> T generate(String prompt, Class<T> responseType) {
         try {
             Map<String, Object> requestBody = Map.of(
                     "contents", List.of(
@@ -47,13 +51,12 @@ public class GeminiService {
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
             String response = restTemplate.postForObject(
-                    GEMINI_API_URL + apiKey,
-                    entity,
-                    String.class
+                    GEMINI_API_URL + apiKey, entity, String.class
             );
 
             JsonNode root = objectMapper.readTree(response);
             JsonNode candidates = root.path("candidates");
+
             if (candidates.isEmpty() || candidates.get(0) == null) {
                 throw new BusinessException(GeneralErrorCode.ANALYTICS_API_ERROR);
             }
@@ -64,7 +67,8 @@ public class GeminiService {
             }
 
             String jsonText = parts.get(0).path("text").asText();
-            return objectMapper.readValue(jsonText, AnalyticResponseDTO.class);
+
+            return objectMapper.readValue(jsonText, responseType);
 
         } catch (BusinessException e) {
             throw e;

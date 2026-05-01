@@ -27,8 +27,8 @@ public class UserService {
     }
 
     @Transactional
-    public void saveOnBoarding(User user, String name, Integer birthYear, String companyType, String jobRole) {
-        user.update(name, birthYear);
+    public void saveOnBoarding(User user, String name, String companyType, String jobRole) {
+        user.update(name);
 
         CareerPreference pref = careerPreferenceRepository.findByUser(user)
                 .orElseGet(() -> CareerPreference.builder()
