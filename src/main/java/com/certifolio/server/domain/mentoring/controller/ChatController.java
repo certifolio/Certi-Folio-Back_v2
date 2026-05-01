@@ -35,7 +35,7 @@ public class ChatController {
             @RequestBody ChatMessageRequestDTO.CreateRoomRequest request) {
 
         ChatMessageResponseDTO.ChatRoomResponse room = chatService.getOrCreateChattingRoom(
-                request.mentorId(), userId);
+                request.mentorId(), userId, request.menteeUserId());
         return ApiResponse.onSuccess("채팅방 조회 또는 생성 성공", room);
     }
 

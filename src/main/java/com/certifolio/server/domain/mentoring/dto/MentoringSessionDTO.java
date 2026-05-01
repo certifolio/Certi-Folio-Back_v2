@@ -1,24 +1,33 @@
-package com.certifolio.server.domain.mentoring.dto.response;
+package com.certifolio.server.domain.mentoring.dto;
 
-import com.certifolio.server.domain.mentoring.entity.Mentor;
-import com.certifolio.server.domain.mentoring.entity.MentoringSession;
 import lombok.Builder;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class MentoringSessionResponseDTO {
+import com.certifolio.server.domain.mentoring.entity.Mentor;
+import com.certifolio.server.domain.mentoring.entity.MentoringSession;
 
+/**
+ * 멘토링 세션 관련 DTO (Java Record)
+ */
+public class MentoringSessionDTO {
+
+    /**
+     * 세션 목록 응답
+     */
     @Builder
     public record SessionsResponse(
             List<SessionItem> sessions,
             int total
     ) {}
 
+    /**
+     * 세션 아이템
+     */
     @Builder
     public record SessionItem(
             Long id,
-            Long mentorId,
             SessionMentor mentor,
             String status,
             String topic,
@@ -27,7 +36,6 @@ public class MentoringSessionResponseDTO {
         public static SessionItem from(MentoringSession session) {
             return SessionItem.builder()
                     .id(session.getId())
-                    .mentorId(session.getMentor().getId())
                     .mentor(SessionMentor.from(session.getMentor()))
                     .status(session.getStatus().name().toLowerCase())
                     .topic(session.getTopic())
@@ -36,6 +44,9 @@ public class MentoringSessionResponseDTO {
         }
     }
 
+    /**
+     * 세션 내 멘토 정보
+     */
     @Builder
     public record SessionMentor(
             String name,
@@ -55,6 +66,25 @@ public class MentoringSessionResponseDTO {
         }
     }
 
+    /**
+     * 세션 생성 요청
+     */
+    public record CreateSessionRequest(
+            Long mentorId,
+            Long requestId,
+            String topic
+    ) {}
+
+    /**
+     * 세션 상태 업데이트 요청
+     */
+    public record UpdateSessionStatusRequest(
+            String status
+    ) {}
+
+    /**
+     * 세션 업데이트 응답
+     */
     @Builder
     public record UpdateSessionResponse(
             boolean success,

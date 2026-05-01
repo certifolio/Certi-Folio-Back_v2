@@ -2,7 +2,7 @@ package com.certifolio.server.domain.mentoring.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDate;
+import java.time.DayOfWeek;
 import java.time.LocalTime;
 
 /**
@@ -25,14 +25,14 @@ public class MentorAvailability {
     private Mentor mentor;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private TimeSlot timeSlot;
+    @Column(name = "day_of_week", nullable = false)
+    private DayOfWeek dayOfWeek;
 
-    @Column(nullable = false)
-    private LocalDate date;
+    @Column(name = "start_time", nullable = false)
+    private LocalTime startTime;
 
-    @Column(nullable = false)
-    private LocalTime time;
+    @Column(name = "end_time", nullable = false)
+    private LocalTime endTime;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

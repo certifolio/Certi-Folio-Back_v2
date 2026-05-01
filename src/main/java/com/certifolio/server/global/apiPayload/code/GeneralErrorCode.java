@@ -98,8 +98,13 @@ public enum GeneralErrorCode implements BaseErrorCode {
     PORTFOLIO_SPEC_EMPTY(HttpStatus.BAD_REQUEST, "PORTFOLIO_003","포트폴리오를 생성할 스펙 데이터가 없습니다."),
     PORTFOLIO_AI_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "PORTFOLIO_004","AI 초안 생성 중 오류가 발생했습니다."),
 
-    ;
-
+    // ============ GROUP CHAT (GC) ============
+    GROUP_CHAT_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "GROUP_CHAT_001", "해당 유저 채팅방을 찾을 수 없습니다."),
+    GROUP_CHAT_ROOM_ALREADY_EXISTS(HttpStatus.CONFLICT, "GROUP_CHAT_002", "이미 동일한 이름의 채팅방이 존재합니다."),
+    GROUP_CHAT_ACCESS_DENIED(HttpStatus.FORBIDDEN, "GROUP_CHAT_003", "해당 유저 채팅방에 참여하지 않았습니다."),
+    GROUP_CHAT_ALREADY_JOINED(HttpStatus.CONFLICT, "GROUP_CHAT_004", "이미 참여 중인 채팅방입니다."),
+    GROUP_CHAT_INVALID_CHATTINGROOM_NAME(HttpStatus.BAD_REQUEST, "GROUP_CHAT_005", "채팅방 이름이 올바르지 않습니다."),
+    GROUP_CHAT_ROOM_LIMIT_EXCEEDED(HttpStatus.CONFLICT, "GROUP_CHAT_006", "한 사용자는 최대 3개까지 채팅방을 만들 수 있습니다.");
     private final HttpStatus httpStatus;
     private final String code;
     private final String message;
