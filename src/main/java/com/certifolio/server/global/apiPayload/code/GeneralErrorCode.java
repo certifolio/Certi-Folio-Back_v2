@@ -56,11 +56,6 @@ public enum GeneralErrorCode implements BaseErrorCode {
     EDUCATION_NOT_FOUND(HttpStatus.NOT_FOUND, "EDUCATION_002", "해당 학력 정보를 찾을 수 없습니다."),
     EDUCATION_UNAUTHORIZED(HttpStatus.FORBIDDEN, "EDUCATION_003", "해당 학력 정보에 접근 권한이 없습니다."),
 
-    // ============ ALGORITHM (AL) ============
-    ALGORITHM_NOT_FOUND(HttpStatus.NOT_FOUND, "ALGORITHM_001", "등록된 알고리즘 정보가 없습니다."),
-    ALGORITHM_HANDLE_NOT_FOUND(HttpStatus.NOT_FOUND, "ALGORITHM_002", "solved.ac에서 해당 핸들을 찾을 수 없습니다."),
-    ALGORITHM_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "ALGORITHM_003", "solved.ac API 호출에 실패했습니다."),
-
     // ============ PROJECT (PJ) ============
     PROJECT_NOT_INPUTTED(HttpStatus.BAD_REQUEST, "PROJECT_001", "프로젝트 정보를 입력하지 않았습니다."),
     PROJECT_NOT_FOUND(HttpStatus.NOT_FOUND, "PROJECT_002", "해당 프로젝트를 찾을 수 없습니다."),
@@ -86,10 +81,6 @@ public enum GeneralErrorCode implements BaseErrorCode {
     // ============ ANALYTICS (AN) ============
     ANALYTICS_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "ANALYTICS_001", "AI 분석 중 오류가 발생했습니다."),
     ANALYTICS_NOT_FOUND(HttpStatus.NOT_FOUND, "ANALYTICS_002", "분석 결과를 찾을 수 없습니다."),
-
-    // ============ CODING TEST (CT) ============
-    SOLVED_AC_USER_NOT_FOUND(HttpStatus.NOT_FOUND, "CODING_001", "solved.ac에서 해당 사용자를 찾을 수 없습니다."),
-    SOLVED_AC_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "CODING_002", "solved.ac API 호출 중 오류가 발생했습니다."),
 
     // ============ NOTIFICATION (N) ============
     NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "NOTI_001", "해당 알림을 찾을 수 없습니다."),
