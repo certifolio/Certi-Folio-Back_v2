@@ -52,4 +52,8 @@ public class User extends BaseTimeEntity {
         if (name != null) this.name = name;
         if (birthYear != null) this.birthYear = birthYear;
     }
+
+    public void updatePicture(String picture) {
+        this.picture = picture;
+    }
 }
