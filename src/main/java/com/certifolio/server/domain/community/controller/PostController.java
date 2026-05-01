@@ -6,9 +6,11 @@ import com.certifolio.server.domain.community.dto.response.PostResponseDTO;
 import com.certifolio.server.domain.community.entity.PostType;
 import com.certifolio.server.domain.community.service.PostService;
 import com.certifolio.server.global.apiPayload.response.ApiResponse;
+import com.certifolio.server.global.service.S3Service;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,6 +21,7 @@ import java.util.List;
 public class PostController {
 
     private final PostService postService;
+    private final S3Service s3Service;
 
     // 글 작성
     @PostMapping("/create")
@@ -66,5 +69,14 @@ public class PostController {
     ) {
         List<PostListResponseDTO> posts = postService.getPosts(type);
         return ApiResponse.onSuccess("글 목록 조회 성공", posts);
+    }
+
+    @PostMapping("/images")
+    public ApiResponse<String> uploadPostImage(
+            @AuthenticationPrincipal Long userId,
+            @RequestPart("file") MultipartFile file
+    ) {
+        String imageUrl = s3Service.uploadFile(file, "posts/" + userId);
+        return ApiResponse.onSuccess("게시글 이미지 업로드 성공", imageUrl);
     }
 }

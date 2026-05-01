@@ -49,4 +49,8 @@ public class User extends BaseTimeEntity {
     public void update(String name) {
         if (name != null) this.name = name;
     }
+
+    public void updatePicture(String picture) {
+        this.picture = picture;
+    }
 }

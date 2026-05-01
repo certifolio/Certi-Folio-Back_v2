@@ -8,6 +8,7 @@ import com.certifolio.server.global.apiPayload.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -44,5 +45,14 @@ public class UserController {
         User user = userService.getUserById(userId);
         userService.saveOnBoarding(user, request.name(), request.companyType(), request.jobRole());
         return ApiResponse.onSuccess("내 정보 수정 성공");
+    }
+
+    @PostMapping("/me/profile-image")
+    public ApiResponse<String> uploadProfileImage(
+            @AuthenticationPrincipal Long userId,
+            @RequestPart("file") MultipartFile file
+    ) {
+        String imageUrl = userService.updateProfileImage(userId, file);
+        return ApiResponse.onSuccess("프로필 이미지 업로드 성공", imageUrl);
     }
 }
