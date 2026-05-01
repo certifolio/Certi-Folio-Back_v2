@@ -99,7 +99,15 @@ public enum GeneralErrorCode implements BaseErrorCode {
     POST_NOT_FOUND(HttpStatus.NOT_FOUND, "POST_001", "해당 글을 찾을 수 없습니다."),
     POST_UNAUTHORIZED(HttpStatus.FORBIDDEN, "POST_002", "해당 글에 접근 권한이 없습니다."),
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "COMMENT_001", "해당 댓글을 찾을 수 없습니다."),
-    COMMENT_UNAUTHORIZED(HttpStatus.FORBIDDEN, "COMMENT_002", "해당 댓글에 접근 권한이 없습니다.");
+    COMMENT_UNAUTHORIZED(HttpStatus.FORBIDDEN, "COMMENT_002", "해당 댓글에 접근 권한이 없습니다."),
+
+    // ============ GROUP CHAT (GC) ============
+    GROUP_CHAT_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "GROUP_CHAT_001", "해당 유저 채팅방을 찾을 수 없습니다."),
+    GROUP_CHAT_ROOM_ALREADY_EXISTS(HttpStatus.CONFLICT, "GROUP_CHAT_002", "이미 동일한 이름의 채팅방이 존재합니다."),
+    GROUP_CHAT_ACCESS_DENIED(HttpStatus.FORBIDDEN, "GROUP_CHAT_003", "해당 유저 채팅방에 참여하지 않았습니다."),
+    GROUP_CHAT_ALREADY_JOINED(HttpStatus.CONFLICT, "GROUP_CHAT_004", "이미 참여 중인 채팅방입니다."),
+    GROUP_CHAT_INVALID_CHATTINGROOM_NAME(HttpStatus.BAD_REQUEST, "GROUP_CHAT_005", "채팅방 이름이 올바르지 않습니다."),
+    GROUP_CHAT_ROOM_LIMIT_EXCEEDED(HttpStatus.CONFLICT, "GROUP_CHAT_006", "한 사용자는 최대 3개까지 채팅방을 만들 수 있습니다.");
     private final HttpStatus httpStatus;
     private final String code;
     private final String message;
