@@ -18,6 +18,7 @@ public class MentoringSessionResponseDTO {
     @Builder
     public record SessionItem(
             Long id,
+            Long mentorId,
             SessionMentor mentor,
             String status,
             String topic,
@@ -26,6 +27,7 @@ public class MentoringSessionResponseDTO {
         public static SessionItem from(MentoringSession session) {
             return SessionItem.builder()
                     .id(session.getId())
+                    .mentorId(session.getMentor().getId())
                     .mentor(SessionMentor.from(session.getMentor()))
                     .status(session.getStatus().name().toLowerCase())
                     .topic(session.getTopic())
