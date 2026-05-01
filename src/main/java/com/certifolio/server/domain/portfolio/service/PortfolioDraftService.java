@@ -21,11 +21,13 @@ import com.certifolio.server.domain.user.service.UserService;
 import com.certifolio.server.global.apiPayload.code.GeneralErrorCode;
 import com.certifolio.server.global.apiPayload.exception.BusinessException;
 import com.certifolio.server.global.common.service.GeminiService;
+import com.certifolio.server.global.service.S3Service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -50,6 +52,7 @@ public class PortfolioDraftService {
     private final GeminiService geminiService;
     private final PortfolioPromptBuilder promptBuilder;
     private final ObjectMapper objectMapper;
+    private final S3Service s3Service;
 
     public PortfolioDraftResponse getLatest(Long userId) {
         PortfolioDraft draft = portfolioDraftRepository.findTopByUserIdOrderByCreatedAtDesc(userId)
@@ -107,6 +110,17 @@ public class PortfolioDraftService {
         } catch (JsonProcessingException e) {
             throw new BusinessException(GeneralErrorCode.JSON_PARSE_ERROR);
         }
+    }
+
+    public String uploadImage(Long userId, Long draftId, MultipartFile file) {
+        PortfolioDraft draft = portfolioDraftRepository.findById(draftId)
+                .orElseThrow(() -> new BusinessException(GeneralErrorCode.PORTFOLIO_DRAFT_NOT_FOUND));
+
+        if (!draft.getUser().getId().equals(userId)) {
+            throw new BusinessException(GeneralErrorCode.PORTFOLIO_DRAFT_UNAUTHORIZED);
+        }
+
+        return s3Service.uploadFile(file, "portfolio/" + userId);
     }
 
     @Transactional
