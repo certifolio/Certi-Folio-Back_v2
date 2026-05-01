@@ -2,7 +2,7 @@ name: Spring Boot Deploy to EC2
 
 on:
   push:
-    branches: [ "main" ] # main 브랜치에 푸시될 때만 실행
+    branches: [ "dev" ] # dev 브랜치에 푸시될 때만 실행
 
 jobs:
   deploy:
