@@ -45,6 +45,11 @@ public class UserService {
                 .orElseThrow(() -> new BusinessException(GeneralErrorCode.USER_HAVE_NO_PREFERENCE));
     }
 
+    @Transactional(readOnly = true)
+    public CareerPreference getCareerPreferenceOrNull(User user) {
+        return careerPreferenceRepository.findByUser(user).orElse(null);
+    }
+  
     @Transactional
     public String updateProfileImage(Long userId, MultipartFile file) {
         User user = getUserById(userId);

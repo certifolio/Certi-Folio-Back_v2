@@ -36,9 +36,10 @@ public class PostController {
     // 글 상세 조회
     @GetMapping("/{postId}")
     public ApiResponse<PostResponseDTO> getPost(
+            @AuthenticationPrincipal Long userId,
             @PathVariable Long postId
     ) {
-        return ApiResponse.onSuccess("글 상세 조회 성공", postService.getPost(postId));
+        return ApiResponse.onSuccess("글 상세 조회 성공", postService.getPost(userId, postId));
     }
 
     // 글 수정

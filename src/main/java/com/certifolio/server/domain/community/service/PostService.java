@@ -8,6 +8,7 @@ import com.certifolio.server.domain.community.entity.Post;
 import com.certifolio.server.domain.community.entity.PostType;
 import com.certifolio.server.domain.community.repository.CommentRepository;
 import com.certifolio.server.domain.community.repository.PostRepository;
+import com.certifolio.server.domain.community.repository.PostViewRepository;
 import com.certifolio.server.domain.user.entity.User;
 import com.certifolio.server.domain.user.service.UserService;
 import com.certifolio.server.global.apiPayload.code.GeneralErrorCode;
@@ -24,6 +25,7 @@ public class PostService {
 
     private final UserService userService;
     private final PostRepository postRepository;
+    private final PostViewRepository postViewRepository;
     private final CommentRepository commentRepository;
 
     // 글 작성 - id만 반환
@@ -48,13 +50,11 @@ public class PostService {
 
     // 글 상세 조회 - 댓글 목록 포함, 조회수 증가
     @Transactional
-    public PostResponseDTO getPost(Long postId) {
-        // 사용자에게 먼저 증가된 값을 보여주기 위해서 먼저 증가.
-        // postId가 존재하지 않아도 밑에서 검증 후 에러 나오고 롤백 진행.
-        postRepository.increaseViewCount(postId);
-
+    public PostResponseDTO getPost(Long userId, Long postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new BusinessException(GeneralErrorCode.POST_NOT_FOUND));
+
+        increaseViewCountIfFirstView(userId, post);
 
         List<CommentResponseDTO> comments = commentRepository.findByPostWithUser(post)
                 .stream()
@@ -86,5 +86,12 @@ public class PostService {
         }
 
         return post;
+    }
+
+    private void increaseViewCountIfFirstView(Long userId, Post post) {
+        int inserted = postViewRepository.insertIgnore(post.getId(), userId);
+        if (inserted == 1) {
+            post.increaseViewCount();
+        }
     }
 }

@@ -2,6 +2,7 @@ package com.certifolio.server.domain.user.controller;
 
 import com.certifolio.server.domain.user.dto.request.UserRequestDTO;
 import com.certifolio.server.domain.user.dto.response.UserResponseDTO;
+import com.certifolio.server.domain.user.entity.CareerPreference;
 import com.certifolio.server.domain.user.entity.User;
 import com.certifolio.server.domain.user.service.UserService;
 import com.certifolio.server.global.apiPayload.response.ApiResponse;
@@ -22,7 +23,8 @@ public class UserController {
     @GetMapping("/me")
     public ApiResponse<UserResponseDTO> getMyInfo(@AuthenticationPrincipal Long userId) {
         User user = userService.getUserById(userId);
-        return ApiResponse.onSuccess("내 정보 조회 성공", UserResponseDTO.from(user));
+        CareerPreference preference = userService.getCareerPreferenceOrNull(user);
+        return ApiResponse.onSuccess("내 정보 조회 성공", UserResponseDTO.from(user, preference));
     }
 
     // 온보딩 저장

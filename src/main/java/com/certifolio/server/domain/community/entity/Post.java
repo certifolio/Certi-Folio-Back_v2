@@ -48,4 +48,8 @@ public class Post extends BaseTimeEntity {
         this.content = content;
         this.type = type;
     }
+
+    public void increaseViewCount() {
+        this.viewCount++;
+    }
 }
