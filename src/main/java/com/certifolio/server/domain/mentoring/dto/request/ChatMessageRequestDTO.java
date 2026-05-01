@@ -11,6 +11,7 @@ public class ChatMessageRequestDTO {
     ) {}
 
     public record CreateRoomRequest(
-            @NotNull Long mentorId
+            @NotNull Long mentorId,
+            Long menteeUserId
     ) {}
 }
