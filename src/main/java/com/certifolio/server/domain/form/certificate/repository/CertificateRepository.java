@@ -9,4 +9,5 @@ import java.util.List;
 public interface CertificateRepository extends JpaRepository<Certificate, Long> {
     List<Certificate> findAllByUserId(Long userId);
     List<Certificate> findByExpiryDate(LocalDate expiryDate);
+    List<Certificate> findAllByUserIdOrderByIssueDateDesc(Long userId);
 }

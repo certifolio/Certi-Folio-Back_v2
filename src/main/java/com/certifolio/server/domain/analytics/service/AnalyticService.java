@@ -5,8 +5,6 @@ import com.certifolio.server.domain.analytics.entity.Analytic;
 import com.certifolio.server.domain.analytics.repository.AnalyticRepository;
 import com.certifolio.server.domain.form.activity.dto.response.ActivityResponseDTO;
 import com.certifolio.server.domain.form.activity.service.ActivityService;
-import com.certifolio.server.domain.form.algorithm.dto.response.AlgorithmResponseDTO;
-import com.certifolio.server.domain.form.algorithm.repository.AlgorithmRepository;
 import com.certifolio.server.domain.form.career.dto.response.CareerResponseDTO;
 import com.certifolio.server.domain.form.career.service.CareerService;
 import com.certifolio.server.domain.form.certificate.dto.response.CertificateResponseDTO;
@@ -21,6 +19,7 @@ import com.certifolio.server.domain.user.repository.CareerPreferenceRepository;
 import com.certifolio.server.domain.user.service.UserService;
 import com.certifolio.server.global.apiPayload.code.GeneralErrorCode;
 import com.certifolio.server.global.apiPayload.exception.BusinessException;
+import com.certifolio.server.global.common.service.GeminiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,13 +35,12 @@ public class AnalyticService {
     private final AnalyticRepository analyticRepository;
     private final CareerPreferenceRepository careerPreferenceRepository;
     private final ActivityService activityService;
-    private final AlgorithmRepository algorithmRepository;
     private final CareerService careerService;
     private final CertificateService certificateService;
     private final EducationService educationService;
     private final ProjectService projectService;
     private final GeminiService geminiService;
-    private final PromptBuilder promptBuilder;
+    private final AnalyticPromptBuilder analyticPromptBuilder;
 
     // 최신 분석 결과 조회
     public AnalyticResponseDTO getLatestAnalytic(Long userId) {
@@ -67,14 +65,11 @@ public class AnalyticService {
         List<ActivityResponseDTO> activities = activityService.getActivities(userId);
         List<CareerResponseDTO> careers = careerService.getCareers(userId);
         List<CertificateResponseDTO> certificates = certificateService.getCertificates(userId);
-        AlgorithmResponseDTO algorithm = algorithmRepository.findByUserId(userId)
-                .map(AlgorithmResponseDTO::from)
-                .orElse(null);
         List<EducationResponseDTO> educations = educationService.getEducations(userId);
         List<ProjectResponseDTO> projects = projectService.getProjects(userId);
         CareerPreference preference = careerPreferenceRepository.findByUser(user).orElse(null);
 
-        String prompt = promptBuilder.build(educations, careers, certificates, projects, activities, algorithm, preference);
+        String prompt = analyticPromptBuilder.build(educations, careers, certificates, projects, activities, preference);
         AnalyticResponseDTO result = geminiService.analyze(prompt);
 
         Analytic analytic = analyticRepository.save(Analytic.builder()

@@ -56,11 +56,6 @@ public enum GeneralErrorCode implements BaseErrorCode {
     EDUCATION_NOT_FOUND(HttpStatus.NOT_FOUND, "EDUCATION_002", "해당 학력 정보를 찾을 수 없습니다."),
     EDUCATION_UNAUTHORIZED(HttpStatus.FORBIDDEN, "EDUCATION_003", "해당 학력 정보에 접근 권한이 없습니다."),
 
-    // ============ ALGORITHM (AL) ============
-    ALGORITHM_NOT_FOUND(HttpStatus.NOT_FOUND, "ALGORITHM_001", "등록된 알고리즘 정보가 없습니다."),
-    ALGORITHM_HANDLE_NOT_FOUND(HttpStatus.NOT_FOUND, "ALGORITHM_002", "solved.ac에서 해당 핸들을 찾을 수 없습니다."),
-    ALGORITHM_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "ALGORITHM_003", "solved.ac API 호출에 실패했습니다."),
-
     // ============ PROJECT (PJ) ============
     PROJECT_NOT_INPUTTED(HttpStatus.BAD_REQUEST, "PROJECT_001", "프로젝트 정보를 입력하지 않았습니다."),
     PROJECT_NOT_FOUND(HttpStatus.NOT_FOUND, "PROJECT_002", "해당 프로젝트를 찾을 수 없습니다."),
@@ -87,10 +82,6 @@ public enum GeneralErrorCode implements BaseErrorCode {
     ANALYTICS_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "ANALYTICS_001", "AI 분석 중 오류가 발생했습니다."),
     ANALYTICS_NOT_FOUND(HttpStatus.NOT_FOUND, "ANALYTICS_002", "분석 결과를 찾을 수 없습니다."),
 
-    // ============ CODING TEST (CT) ============
-    SOLVED_AC_USER_NOT_FOUND(HttpStatus.NOT_FOUND, "CODING_001", "solved.ac에서 해당 사용자를 찾을 수 없습니다."),
-    SOLVED_AC_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "CODING_002", "solved.ac API 호출 중 오류가 발생했습니다."),
-
     // ============ NOTIFICATION (N) ============
     NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "NOTI_001", "해당 알림을 찾을 수 없습니다."),
     NOTIFICATION_UNAUTHORIZED(HttpStatus.FORBIDDEN, "NOTI_002", "해당 알림에 접근 권한이 없습니다."),
@@ -100,6 +91,12 @@ public enum GeneralErrorCode implements BaseErrorCode {
     POST_UNAUTHORIZED(HttpStatus.FORBIDDEN, "POST_002", "해당 글에 접근 권한이 없습니다."),
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "COMMENT_001", "해당 댓글을 찾을 수 없습니다."),
     COMMENT_UNAUTHORIZED(HttpStatus.FORBIDDEN, "COMMENT_002", "해당 댓글에 접근 권한이 없습니다."),
+
+    // ============ PORTFOLIO (P) ============
+    PORTFOLIO_DRAFT_NOT_FOUND(HttpStatus.NOT_FOUND, "PORTFOLIO_001","포트폴리오 초안을 찾을 수 없습니다."),
+    PORTFOLIO_DRAFT_UNAUTHORIZED(HttpStatus.FORBIDDEN, "PORTFOLIO_002","해당 포트폴리오 초안에 접근 권한이 없습니다."),
+    PORTFOLIO_SPEC_EMPTY(HttpStatus.BAD_REQUEST, "PORTFOLIO_003","포트폴리오를 생성할 스펙 데이터가 없습니다."),
+    PORTFOLIO_AI_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "PORTFOLIO_004","AI 초안 생성 중 오류가 발생했습니다."),
 
     // ============ GROUP CHAT (GC) ============
     GROUP_CHAT_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "GROUP_CHAT_001", "해당 유저 채팅방을 찾을 수 없습니다."),
@@ -111,4 +108,4 @@ public enum GeneralErrorCode implements BaseErrorCode {
     private final HttpStatus httpStatus;
     private final String code;
     private final String message;
-}
+    }
