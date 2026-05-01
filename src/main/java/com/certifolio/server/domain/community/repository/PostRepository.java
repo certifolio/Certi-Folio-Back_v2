@@ -4,7 +4,6 @@ import com.certifolio.server.domain.community.dto.response.PostListResponseDTO;
 import com.certifolio.server.domain.community.entity.Post;
 import com.certifolio.server.domain.community.entity.PostType;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -22,8 +21,4 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         ORDER BY p.createdAt DESC
     """)
     List<PostListResponseDTO> findPostList(@Param("type") PostType type);
-
-    @Modifying(clearAutomatically = true)
-    @Query("UPDATE Post p SET p.viewCount = p.viewCount + 1 WHERE p.id = :id")
-    void increaseViewCount(@Param("id") Long id);
 }
