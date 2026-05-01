@@ -154,22 +154,26 @@ public class MentorService {
         }
 
         if (request.availability() != null) {
-            for (String timeSlot : request.availability()) {
+            for (MentorRequestDTO.AvailabilityRequest slot : request.availability()) {
+                validateAvailability(slot);
                 MentorAvailability availability = MentorAvailability.builder()
                         .mentor(mentor)
-                        .timeSlot(parseTimeSlot(timeSlot))
+                        .dayOfWeek(slot.dayOfWeek())
+                        .startTime(slot.startTime())
+                        .endTime(slot.endTime())
+                        .slotType(slot.slotType())
                         .build();
                 mentor.addAvailability(availability);
             }
         }
     }
-    /**
-     * TimeSlot 예외처리
-     */
-    private TimeSlot parseTimeSlot(String value) {
-        try {
-            return TimeSlot.valueOf(value);
-        } catch (IllegalArgumentException e) {
+
+    private void validateAvailability(MentorRequestDTO.AvailabilityRequest slot) {
+        if (slot.startTime() == null || slot.endTime() == null || !slot.endTime().isAfter(slot.startTime())) {
+            throw new BusinessException(GeneralErrorCode.INVALID_TIME_SLOT);
+        }
+
+        if (slot.startTime().equals(LocalTime.MAX) || slot.endTime().equals(LocalTime.MIN)) {
             throw new BusinessException(GeneralErrorCode.INVALID_TIME_SLOT);
         }
     }
