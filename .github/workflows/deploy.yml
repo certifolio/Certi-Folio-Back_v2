@@ -28,6 +28,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_KEY }}
+          port: 22
           source: "build/libs/*.jar"
           target: "~/backend"
           strip_components: 2
@@ -38,6 +39,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_KEY }}
+          port: 22
           script: |
             cd ~/backend
             
