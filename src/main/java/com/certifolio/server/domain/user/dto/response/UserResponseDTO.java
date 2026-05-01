@@ -9,8 +9,7 @@ public record UserResponseDTO(
         String email,
         String picture,
         Role role,
-        String provider,
-        Integer birthYear
+        String provider
 ) {
     public static UserResponseDTO from(User user) {
         return new UserResponseDTO(
@@ -19,8 +18,7 @@ public record UserResponseDTO(
                 user.getEmail(),
                 user.getPicture(),
                 user.getRole(),
-                user.getProvider(),
-                user.getBirthYear()
+                user.getProvider()
         );
     }
 }

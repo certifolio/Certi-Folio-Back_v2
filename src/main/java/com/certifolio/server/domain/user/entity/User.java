@@ -36,8 +36,6 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false)
     private String providerId;
 
-    private Integer birthYear;
-
     @Builder
     public User(String name, String email, String picture, Role role, String provider, String providerId) {
         this.name = name;
@@ -48,8 +46,7 @@ public class User extends BaseTimeEntity {
         this.providerId = providerId;
     }
 
-    public void update(String name, Integer birthYear) {
+    public void update(String name) {
         if (name != null) this.name = name;
-        if (birthYear != null) this.birthYear = birthYear;
     }
 }
