@@ -71,3 +71,12 @@ app:
 gemini:
   api:
     key: ${GEMINI_API_KEY}
+
+cloud:
+  aws:
+    s3:
+      bucket: certifolio-426901907488-ap-northeast-2-an
+    region:
+      static: ap-northeast-2
+    stack:
+      auto: false # AWS 스택 자동 탐색 비활성화
