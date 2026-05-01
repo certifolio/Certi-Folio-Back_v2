@@ -7,6 +7,7 @@ import com.certifolio.server.global.apiPayload.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
@@ -36,6 +37,15 @@ public class PortfolioDraftController {
             @RequestBody PortfolioDraftUpdateRequest request
     ) {
         return ApiResponse.onSuccess("포트폴리오 초안 수정 성공", portfolioDraftService.update(userId, id, request));
+    }
+
+    @PostMapping("/{id}/image")
+    public ApiResponse<String> uploadImage(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long id,
+            @RequestPart("file") MultipartFile file
+    ) {
+        return ApiResponse.onSuccess("포트폴리오 이미지 업로드 성공", portfolioDraftService.uploadImage(userId, id, file));
     }
 
     @DeleteMapping("/{id}")
