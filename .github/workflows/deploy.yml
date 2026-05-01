@@ -18,7 +18,9 @@ jobs:
           distribution: 'corretto'
 
       - name: 3. application-secret.yaml 생성
-        run: echo "${{ secrets.APPLICATION_SECRET_YAML }}" > src/main/resources/application-secret.yaml
+        env:
+          APPLICATION_SECRET_YAML: ${{ secrets.APPLICATION_SECRET_YAML }}
+        run: echo "$APPLICATION_SECRET_YAML" > src/main/resources/application-secret.yaml
 
       - name: 4. Spring Boot 빌드 (.jar 파일 만들기)
         run: |
