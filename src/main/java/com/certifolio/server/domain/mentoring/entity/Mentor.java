@@ -55,6 +55,21 @@ public class Mentor extends BaseTimeEntity {
     @Builder.Default
     private List<MentorAvailability> availabilities = new ArrayList<>();
 
+    @Column(length = 500)
+    private String rejectReason; // 거절 사유
+
+    // 승인
+    public void approve() {
+        this.status = MentorStatus.APPROVED;
+        this.rejectReason = null;
+    }
+
+    // 거절
+    public void reject(String reason) {
+        this.status = MentorStatus.REJECTED;
+        this.rejectReason = reason;
+    }
+
     // Helper methods
     public void updateProfile(String title, String company, String experience, String bio, PreferredFormat preferredFormat) {
         this.title = title;
