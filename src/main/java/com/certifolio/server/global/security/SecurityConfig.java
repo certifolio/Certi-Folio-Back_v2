@@ -54,6 +54,7 @@ public class SecurityConfig {
                                 "/dev/**",
                                 "/ws/**"
                         ).permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
 

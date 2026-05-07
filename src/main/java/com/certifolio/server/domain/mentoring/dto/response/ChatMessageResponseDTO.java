@@ -41,7 +41,9 @@ public class ChatMessageResponseDTO {
             String userName,
             String userProfileImage,
             LocalDateTime createdAt,
-            LocalDateTime lastMessageAt
+            LocalDateTime lastMessageAt,
+            String lastMessageContent,
+            String lastMessageSenderName
     ) {}
 
     @Builder

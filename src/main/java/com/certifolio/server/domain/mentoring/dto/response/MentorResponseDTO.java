@@ -6,6 +6,7 @@ import com.certifolio.server.domain.mentoring.entity.Mentor;
 import com.certifolio.server.domain.mentoring.entity.MentorSkill;
 import lombok.Builder;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -106,5 +107,56 @@ public class MentorResponseDTO {
             boolean success,
             String message,
             Long mentorId
+    ) {}
+
+    // ===== 관리자용 DTO =====
+
+    @Builder
+    public record AdminMentorListItem(
+            Long mentorId,
+            Long userId,
+            String name,
+            String email,
+            String title,
+            String company,
+            String experience,
+            List<String> skills,
+            String bio,
+            String status,
+            String rejectReason,
+            LocalDateTime appliedAt
+    ) {
+        public static AdminMentorListItem from(Mentor mentor) {
+            return AdminMentorListItem.builder()
+                    .mentorId(mentor.getId())
+                    .userId(mentor.getUser().getId())
+                    .name(mentor.getUser().getName())
+                    .email(mentor.getUser().getEmail())
+                    .title(mentor.getTitle())
+                    .company(mentor.getCompany())
+                    .experience(mentor.getExperience())
+                    .skills(mentor.getSkills().stream()
+                            .map(MentorSkill::getSkillName)
+                            .collect(Collectors.toList()))
+                    .bio(mentor.getBio())
+                    .status(mentor.getStatus().name())
+                    .rejectReason(mentor.getRejectReason())
+                    .appliedAt(mentor.getCreatedAt())
+                    .build();
+        }
+    }
+
+    @Builder
+    public record AdminMentorListResponse(
+            List<AdminMentorListItem> mentors,
+            int total
+    ) {}
+
+    @Builder
+    public record AdminMentorActionResponse(
+            boolean success,
+            String message,
+            Long mentorId,
+            String status
     ) {}
 }

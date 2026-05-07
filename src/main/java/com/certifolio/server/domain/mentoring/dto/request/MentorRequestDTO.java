@@ -31,4 +31,8 @@ public class MentorRequestDTO {
             @NotNull LocalTime endTime,
             @NotNull SlotType slotType
     ) {}
+
+    public record RejectRequest(
+            String reason
+    ) {}
 }

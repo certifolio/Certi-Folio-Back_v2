@@ -21,4 +21,8 @@ public interface MentorRepository extends JpaRepository<Mentor, Long> {
 
     @Query("SELECT m FROM Mentor m JOIN m.skills s WHERE s.skillName IN :skills AND m.status = 'APPROVED'")
     List<Mentor> findBySkillsContaining(@Param("skills") List<String> skills);
+
+    // 상태별 전체 목록 (생성일 내림차순) - 관리자용
+    @Query("SELECT m FROM Mentor m ORDER BY m.createdAt DESC")
+    List<Mentor> findAllOrderByCreatedAtDesc();
 }

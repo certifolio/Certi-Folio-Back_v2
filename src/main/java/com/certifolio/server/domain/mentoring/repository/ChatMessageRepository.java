@@ -25,4 +25,10 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
      */
     @Query("SELECT m FROM ChatMessage m WHERE m.chatRoom.id = :chatRoomId ORDER BY m.id DESC")
     List<ChatMessage> findByChatRoomIdLatest(@Param("chatRoomId") Long chatRoomId, Pageable pageable);
+
+    /**
+     * 채팅방의 가장 최신 메시지 1건 조회 (채팅방 목록 미리보기용)
+     */
+    @Query("SELECT m FROM ChatMessage m WHERE m.chatRoom.id = :chatRoomId ORDER BY m.id DESC")
+    List<ChatMessage> findTopByChatRoomId(@Param("chatRoomId") Long chatRoomId, Pageable pageable);
 }
