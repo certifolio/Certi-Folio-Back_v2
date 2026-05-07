@@ -16,6 +16,7 @@ import com.certifolio.server.global.apiPayload.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -233,6 +234,11 @@ public class ChatService {
                 User mentorUser = mentor.getUser();
                 User chatUser = room.getUser();
 
+                // 마지막 메시지 1건 조회 (채팅 목록 미리보기용)
+                Optional<ChatMessage> lastMessage = chatMessageRepository
+                        .findTopByChatRoomId(room.getId(), PageRequest.of(0, 1))
+                        .stream().findFirst();
+
                 return ChatMessageResponseDTO.ChatRoomResponse.builder()
                                 .chatRoomId(room.getId())
                                 .mentorId(mentor.getId())
@@ -245,6 +251,8 @@ public class ChatService {
                                 .userProfileImage(chatUser.getPicture())
                                 .createdAt(room.getCreatedAt())
                                 .lastMessageAt(room.getLastMessageAt())
+                                .lastMessageContent(lastMessage.map(ChatMessage::getContent).orElse(null))
+                                .lastMessageSenderName(lastMessage.map(m -> m.getSender().getName()).orElse(null))
                                 .build();
         }
 }
